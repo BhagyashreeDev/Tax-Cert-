@@ -1,0 +1,297 @@
+<%- include('../header.html') -%>
+<%- include('../menu.html') -%>
+
+<style type="text/css">
+	
+</style>
+
+<main class="container">
+
+	<div class="row gx-5">
+		
+		<div class="col-sm-12 col-md-12 p-1">
+			<div class="bg-body-tertiary p-4">	
+				<h6><span class="badge text-bg-secondary rounded-0">Edit County</span></h6>
+				<br>
+				
+				<!-- Search County Section -->
+				<div class="mb-4">
+					<h6 class="text-muted">Search County to Edit</h6>
+					<div class="row">
+						<div class="col-sm-4 col-md-4">
+							<label for="search_state_code" class="form-label">State Code</label>
+							<select class="form-select" name="search_state_code" id="search_state_code" aria-label="Default select example" autocomplete="off">
+								<option selected value="">Select State Code</option>								
+							</select>
+						</div>
+						<div class="col-sm-6 col-md-6">
+							<label for="search_county_name" class="form-label">County Name</label>
+							<input type="text" class="form-control" name="search_county_name" id="search_county_name" placeholder="Enter county name" autocomplete="off">
+						</div>
+						<div class="col-sm-2 col-md-2 d-flex align-items-end">
+							<button type="button" id="searchBtn" class="btn btn-primary btn-sm rounded-0">Search</button>
+						</div>
+					</div>
+					<div class="mt-2" id="search-result-display"></div>
+				</div>
+
+				<hr>
+
+				<!-- Edit Form Section -->
+				<form id="county_edit_form" style="display: none;">
+					<input type="hidden" id="county_id" name="county_id">
+					<div class="row">
+						<div class="col-sm-4 col-md-4">
+							<label for="state_code" class="form-label">State Code</label>
+							<select class="form-select" name="state_code" id="state_code" aria-label="Default select example" required autocomplete="off">
+								<option selected value="" disabled>Select State Code</option>								
+							</select>
+						</div>
+						<div class="col-sm-4 col-md-4">
+							<label for="state_name" class="form-label">State Name</label>
+							<input type="text" class="form-control" name="state_name" id="state_name" readonly required autocomplete="off">
+						</div>
+						<div class="col-sm-4 col-md-4">
+							<label for="county_name" class="form-label">County Name</label>
+							<input type="text" class="form-control" name="county_name" id="county_name" required autocomplete="off">
+						</div>
+					</div>
+					<br>
+					<div class="row">												
+						<div class="mb-3">
+							<label for="website_link" class="form-label">Property Tax Website Link</label>
+							<input type="text" class="form-control" name="website_link" id="website_link" required autocomplete="off">
+						</div>						
+					</div>
+					<div class="row">
+						<div class="col-sm-6 col-md-6">
+							<label for="path" class="form-label">App Path</label>
+							<input type="text" class="form-control" name="path" id="path" placeholder="/tax/{state_code}/{county_name}" required autocomplete="off">
+						</div>
+						<div class="col-sm-6 col-md-6">
+							<label for="status" class="form-label">Status</label>
+							<select class="form-select" name="status" id="status" aria-label="Default select example" autocomplete="off">
+								<option selected value="" disabled>Select status</option>								
+								<option value="1">Live</option>								
+								<option value="0">Disabled</option>								
+							</select>
+						</div>						
+					</div>	
+					<br>					
+					<div class="d-grid d-md-flex justify-content-md-end mt-4">
+						<div class="me-5" hidden id="result-display"><b>Hello</b></div>
+						<button type="button" id="cancelBtn" class="btn btn-secondary px-4 btn-sm rounded-0 me-2">Cancel</button>
+						<button type="submit" id="updateBtn" class="btn btn-primary px-4 btn-sm rounded-0">Update County</button>
+					</div>
+				</form>
+			</div>
+		</div>
+
+	</div>
+
+</main>
+
+<script>
+
+	(() => {
+		const state_data = {"AL":"Alabama","AK":"Alaska","AZ":"Arizona","AR":"Arkansas","CA":"California","CO":"Colorado","CT":"Connecticut","DC": "District Of Columbia","DE":"Delaware","FL":"Florida","GA":"Georgia","HI":"Hawaii","ID":"Idaho","IL":"Illinois","IN":"Indiana","IA":"Iowa","KS":"Kansas","KY":"Kentucky","LA":"Louisiana","ME":"Maine","MD":"Maryland","MA":"Massachusetts","MI":"Michigan","MN":"Minnesota","MS":"Mississippi","MO":"Missouri","MT":"Montana","NE":"Nebraska","NV":"Nevada","NH":"New Hampshire","NJ":"New Jersey","NM":"New Mexico","NY":"New York","NC":"North Carolina","ND":"North Dakota","OH":"Ohio","OK":"Oklahoma","OR":"Oregon","PA":"Pennsylvania","RI":"Rhode Island","SC":"South Carolina","SD":"South Dakota","TN":"Tennessee","TX":"Texas","UT":"Utah","VT":"Vermont","VA":"Virginia","WA":"Washington","WV":"West Virginia","WI":"Wisconsin","WY":"Wyoming"};	
+
+		// LOAD THE STATE CODE for both dropdowns
+		const state_code_select = document.getElementById("state_code");
+		const search_state_code_select = document.getElementById("search_state_code");
+		const state_name_input = document.getElementById("state_name");
+		const path_input = document.getElementById("path");
+		
+		function load_state_code(){
+			for(const property in state_data) {
+				const option = document.createElement("option");
+				option.value = property;
+				option.textContent = property;
+				state_code_select.append(option);
+
+				const searchOption = document.createElement("option");
+				searchOption.value = property;
+				searchOption.textContent = property;
+				search_state_code_select.append(searchOption);
+			}
+		}
+		load_state_code();
+
+		// AUTO FILL THE STATE NAME
+		state_code_select.addEventListener("change", () => {
+			let value = state_code_select.value;
+			state_name_input.value = state_data[value];
+			path_input.value = `/tax/${value}/${document.getElementById("county_name").value.toLowerCase().replace(/\s+/g, '_')}`;
+		})
+
+		document.getElementById("county_name").addEventListener("input", () => {
+			if(state_code_select.value) {
+				path_input.value = `/tax/${state_code_select.value}/${document.getElementById("county_name").value.toLowerCase().replace(/\s+/g, '_')}`;
+			}
+		});
+	})();
+
+	(() => {
+		// SEARCH COUNTY
+		const searchBtn = document.getElementById("searchBtn");
+		const searchResultDiv = document.getElementById("search-result-display");
+		const editForm = document.getElementById("county_edit_form");
+		const resultDiv = document.getElementById("result-display");
+
+		searchBtn.addEventListener("click", async () => {
+			const state_code = document.getElementById("search_state_code").value;
+			const county_name = document.getElementById("search_county_name").value.trim();
+
+			searchResultDiv.innerHTML = "";
+			editForm.style.display = "none";
+
+			if(!state_code && !county_name) {
+				searchResultDiv.innerHTML = '<div class="alert alert-warning">Please select a state code or enter a county name</div>';
+				return;
+			}
+
+			try {
+				const response = await fetch(`/county/search?state_code=${state_code}&county_name=${county_name}`);
+				const result = await response.json();
+
+				if(result.error) {
+					searchResultDiv.innerHTML = `<div class="alert alert-danger">${result.message}</div>`;
+					return;
+				}
+
+				if(result.data.length === 0) {
+					searchResultDiv.innerHTML = '<div class="alert alert-info">No counties found</div>';
+					return;
+				}
+
+				// Display search results
+				let html = '<div class="table-responsive"><table class="table table-bordered table-sm"><thead><tr><th>State</th><th>County</th><th>Path</th><th>Status</th><th>Action</th></tr></thead><tbody>';
+				result.data.forEach(county => {
+					const statusText = county.status == 1 ? '<span class="badge bg-success">Live</span>' : '<span class="badge bg-secondary">Disabled</span>';
+					html += `<tr>
+						<td>${county.state_code}</td>
+						<td>${county.county_name}</td>
+						<td>${county.path}</td>
+						<td>${statusText}</td>
+						<td><button class="btn btn-sm btn-primary rounded-0" onclick="loadCountyData(${county.id})">Edit</button></td>
+					</tr>`;
+				});
+				html += '</tbody></table></div>';
+				searchResultDiv.innerHTML = html;
+
+			} catch(error) {
+				console.log(error);
+				searchResultDiv.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
+			}
+		});
+
+		// Cancel button
+		document.getElementById("cancelBtn").addEventListener("click", () => {
+			editForm.style.display = "none";
+			resultDiv.setAttribute("hidden", true);
+		});
+
+	})();
+
+	// Load county data into form
+	window.loadCountyData = async (id) => {
+		const editForm = document.getElementById("county_edit_form");
+		const resultDiv = document.getElementById("result-display");
+		
+		resultDiv.setAttribute("hidden", true);
+
+		try {
+			const response = await fetch(`/county/get/${id}`);
+			const result = await response.json();
+
+			if(result.error) {
+				alert(result.message);
+				return;
+			}
+
+			const county = result.data;
+			document.getElementById("county_id").value = county.id;
+			document.getElementById("state_code").value = county.state_code;
+			document.getElementById("state_name").value = county.state_name;
+			document.getElementById("county_name").value = county.county_name;
+			document.getElementById("website_link").value = county.property_tax_link;
+			document.getElementById("path").value = county.path;
+			document.getElementById("status").value = county.status;
+
+			editForm.style.display = "block";
+			editForm.scrollIntoView({ behavior: 'smooth' });
+
+		} catch(error) {
+			console.log(error);
+			alert("Error loading county data");
+		}
+	};
+
+	(() => {
+		// SUBMIT THE EDIT FORM
+		const form = document.getElementById("county_edit_form");
+		const resultDiv = document.getElementById("result-display");
+		
+		form.addEventListener("submit", async (event) => {
+			event.preventDefault();
+
+			resultDiv.setAttribute("hidden", true);
+			resultDiv.classList.remove("text-danger");
+			resultDiv.classList.remove("text-success");
+
+			const data = {
+				id: form.querySelector("#county_id").value,
+				state_code: form.querySelector("#state_code").value,
+				state_name: form.querySelector("#state_name").value,
+				county_name: form.querySelector("#county_name").value,
+				website_link: form.querySelector("#website_link").value,
+				path: form.querySelector("#path").value,
+				status: form.querySelector("#status").value,
+			};
+
+			if(!data.id || data.state_code == "" || data.state_name == "" || data.county_name == "" || data.website_link == "" || data.path == "" || data.status == ""){
+				resultDiv.removeAttribute("hidden");
+				resultDiv.classList.add("text-danger");
+				resultDiv.textContent = "Please fill all the data";
+				return;
+			}
+
+			try {
+				const response = await fetch(`/county/edit`, {
+					method: "PUT",
+					headers: {
+						"Content-Type": "application/json"
+					},
+					body: JSON.stringify(data)
+				});
+				const result = await response.json();
+
+				if(result.error) {
+					resultDiv.removeAttribute("hidden");
+					resultDiv.classList.add("text-danger");
+					resultDiv.textContent = result.message;
+					return;
+				}
+
+				resultDiv.removeAttribute("hidden");
+				resultDiv.classList.add("text-success");
+				resultDiv.textContent = result.message;
+				
+				// Refresh search results
+				setTimeout(() => {
+					document.getElementById("searchBtn").click();
+				}, 1500);
+			}
+			catch(error) {
+				console.log(error);
+				resultDiv.removeAttribute("hidden");
+				resultDiv.classList.add("text-danger");
+				resultDiv.textContent = error.message;
+			}			
+		});
+
+	})();
+
+</script>
+
+<%- include('../footer.html') -%>
