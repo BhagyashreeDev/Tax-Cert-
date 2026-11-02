@@ -43,6 +43,7 @@ route.post("/noble", wyandot_search);
 route.post("/hardin", wyandot_search);
 
 route.post("/delaware", delaware_search);
+route.post("/columbiana", delaware_search);
 
 
 export default route;

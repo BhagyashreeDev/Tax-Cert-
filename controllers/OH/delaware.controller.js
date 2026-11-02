@@ -1,6 +1,29 @@
 // Author:- Bhagyashree Badadal
 
+// Parcel-ID
+
 import getBrowserInstance from "../../utils/chromium/browserLaunch.js";
+
+const county_data = {
+    "delaware": {
+        url: (account) => `https://delaware-auditor-ohio.manatron.com/Property.aspx?mpropertynumber=${account}`,
+        auth: "Delaware County Treasurer, 145 N Union St, Delaware, OH 43015",
+        first_half_due: "02/10",
+        first_half_delq: "02/11",
+        second_half_due: "07/10",
+        second_half_delq: "07/11"
+    },
+
+    "columbiana": {
+        url: (account) => `https://oh-columbiana-auditor.publicaccessnow.com/Property.aspx?mpropertynumber=${account}`,
+        auth: "Columbiana County Treasurer, 105 S. Market St., Lisbon, OH 44432",
+        first_half_due: "02/20",
+        first_half_delq: "02/21",
+        second_half_due: "10/02",
+        second_half_delq: "10/03"
+    }
+}
+
 
 const timeout_option = {
     timeout: 90000,
@@ -19,7 +42,7 @@ function createPropertyObject() {
         total_assessed_value: "",
         exemption: "",
         total_taxable_value: "",
-        taxing_authority: "Delaware County Treasurer, 145 N Union St, Delaware, OH 43015",
+        taxing_authority: "",
         notes: "",
         delinquent: "NONE",
         tax_history: [],
@@ -43,7 +66,7 @@ function createTaxHistory() {
     };
 }
 
-const generate_notes = (year, keys, status1, status2) => {
+const generate_notes = (year, keys, status1, status2, county_config) => {
     let notes = "";
     try {
         notes =
@@ -52,7 +75,8 @@ const generate_notes = (year, keys, status1, status2) => {
                 : `PRIORS ARE DELINQUENT,`;
         notes += ` ${year} 1ST INSTALLMENT IS ${(status1).toUpperCase()}, 2ND INSTALLMENT IS ${(status2).toUpperCase()},`;
         notes += ` NORMALLY TAXES ARE PAID SEMI-ANNUALLY,`;
-        notes += ` NORMAL DUE DATES ARE 02/10 AND 07/10`;
+        // Inject dynamic due dates based on the county configuration
+        notes += ` NORMAL DUE DATES ARE ${county_config.first_half_due} AND ${county_config.second_half_due}`;
     } catch (error) {
         console.log(error);
     } finally {
@@ -60,17 +84,19 @@ const generate_notes = (year, keys, status1, status2) => {
     }
 };
 
-function populateObject(accountNumber, propData, taxData) {
+function populateObject(accountNumber, propData, taxData, county_config) {
     const result = createPropertyObject();
 
     result.parcel_number = accountNumber;
+    // Map the dynamic taxing authority
+    result.taxing_authority = county_config.auth; 
     
     if (propData.ownerName) {
         result.owner_name = propData.ownerName.split("&").map(name => name.trim());
     }
-    result.property_address = propData.propertyAddress || "";
-    result.total_assessed_value = taxData.totalAssessedValue || "";
-    result.total_taxable_value = result.total_assessed_value;
+    result.property_address = propData.propertyAddress || "N/A";
+    result.total_assessed_value = taxData.totalAssessedValue || "N/A";
+    result.total_taxable_value = taxData.totalTaxableValue || "N/A";
 
     if (taxData.taxYear !== "Unknown") {
         const dueYear = parseInt(taxData.taxYear, 10) + 1;
@@ -81,8 +107,9 @@ function populateObject(accountNumber, propData, taxData) {
         inst1.base_amount = taxData.firstHalf.netTaxDue || "";
         inst1.amount_paid = taxData.firstHalf.totalPaid || "";
         inst1.amount_due = taxData.firstHalf.balanceDue || "";
-        inst1.due_date = `02/10/${dueYear}`;
-        inst1.delq_date = `02/11/${dueYear}`;
+        // Map dynamic due and delinquent dates
+        inst1.due_date = `${county_config.first_half_due}/${dueYear}`;
+        inst1.delq_date = `${county_config.first_half_delq}/${dueYear}`;
         inst1.paid_date = taxData.firstHalf.paidDate !== "Not Paid / Not Found" ? taxData.firstHalf.paidDate : "";
 
         const inst2 = createTaxHistory();
@@ -91,8 +118,9 @@ function populateObject(accountNumber, propData, taxData) {
         inst2.base_amount = taxData.secondHalf.netTaxDue || "";
         inst2.amount_paid = taxData.secondHalf.totalPaid || "";
         inst2.amount_due = taxData.secondHalf.balanceDue || "";
-        inst2.due_date = `07/10/${dueYear}`;
-        inst2.delq_date = `07/11/${dueYear}`;
+        // Map dynamic due and delinquent dates
+        inst2.due_date = `${county_config.second_half_due}/${dueYear}`;
+        inst2.delq_date = `${county_config.second_half_delq}/${dueYear}`;
         inst2.paid_date = taxData.secondHalf.paidDate !== "Not Paid / Not Found" ? taxData.secondHalf.paidDate : "";
 
         result.tax_history.push(inst1, inst2);
@@ -147,13 +175,14 @@ function populateObject(accountNumber, propData, taxData) {
         );
 
         const keys = hasPriorDelinquent ? 0 : 1;
-        result.notes = generate_notes(latestTax.year, keys, status1, status2);
+        // Pass county_config into generate_notes
+        result.notes = generate_notes(latestTax.year, keys, status1, status2, county_config);
     }
 
     return result;
 }
 
-async function getDetails(page, accountNumber) {
+async function getDetails(page, accountNumber, county_config) {
     // 1. Verify Property Exists before scraping
     try {
         await page.waitForSelector("td.ui-state-default", { timeout: 10000 });
@@ -189,11 +218,9 @@ async function getDetails(page, accountNumber) {
         };
     });
 
-    // 3. Navigate to the Tax page
-    await page.goto(
-        `https://delaware-auditor-ohio.manatron.com/Tax.aspx?mpropertynumber=${accountNumber}`,
-        { waitUntil: "networkidle2", ...timeout_option }
-    );
+    // 3. Navigate to the Tax page dynamically based on the county_config URL
+    const taxUrl = county_config.url(accountNumber).replace("Property.aspx", "Tax.aspx");
+    await page.goto(taxUrl, { waitUntil: "networkidle2", ...timeout_option });
 
     // Verify Tax Data Exists
     try {
@@ -203,10 +230,51 @@ async function getDetails(page, accountNumber) {
         return null;
     }
 
-    // 4. Extract Tax Details
+    // 4. Extract Tax Details (Using your updated robust Assessed/Taxable extraction logic)
     const taxData = await page.evaluate(() => {
         const clean = (str) => (str ? str.trim().replace(/\s+/g, " ") : null);
         const tds = Array.from(document.querySelectorAll("td.ui-state-default"));
+
+        let totalAssessedValue = null;
+        let totalTaxableValue = null;
+
+        const spans = Array.from(document.querySelectorAll("span"));
+        
+        const assessedHeader = spans.find(s => s.textContent.trim() === "Market/Assessed Value");
+        if (assessedHeader) {
+            const table = assessedHeader.closest("table");
+            if (table) {
+                const labelTd = Array.from(table.querySelectorAll("td")).find(td => td.textContent.trim() === "Total");
+                if (labelTd && labelTd.nextElementSibling) {
+                    totalAssessedValue = clean(labelTd.nextElementSibling.textContent);
+                }
+            }
+        }
+
+        const taxableHeader = spans.find(s => s.textContent.trim() === "Taxable Value");
+        if (taxableHeader) {
+            const table = taxableHeader.closest("table");
+            if (table) {
+                const labelTd = Array.from(table.querySelectorAll("td")).find(td => td.textContent.trim() === "Total");
+                if (labelTd && labelTd.nextElementSibling) {
+                    totalTaxableValue = clean(labelTd.nextElementSibling.textContent);
+                }
+            }
+        }
+
+        if (!totalAssessedValue && !totalTaxableValue) {
+            const totalTds = tds.filter(td => td.textContent.trim() === "Total" && td.nextElementSibling && td.nextElementSibling.textContent.includes("$"));
+            
+            if (totalTds.length >= 2) {
+                totalAssessedValue = clean(totalTds[0].nextElementSibling.textContent);
+                totalTaxableValue = clean(totalTds[1].nextElementSibling.textContent);
+            } else if (totalTds.length === 1) {
+                totalAssessedValue = clean(totalTds[0].nextElementSibling.textContent);
+                totalTaxableValue = totalAssessedValue;
+            }
+        } else if (totalAssessedValue && !totalTaxableValue) {
+            totalTaxableValue = totalAssessedValue;
+        }
 
         const getValueByTdLabel = (label) => {
             const targetTd = tds.find(td => td.textContent.trim() === label && td.nextElementSibling && td.nextElementSibling.textContent.includes("$"));
@@ -215,7 +283,6 @@ async function getDetails(page, accountNumber) {
 
         const landValue = getValueByTdLabel("Land");
         const improvementsValue = getValueByTdLabel("Improvements");
-        const totalAssessedValue = getValueByTdLabel("Total");
 
         const getTaxRowValues = (rowLabel) => {
             const labelTd = tds.find(td => td.textContent.trim() === rowLabel);
@@ -275,6 +342,7 @@ async function getDetails(page, accountNumber) {
             landValue,
             improvementsValue,
             totalAssessedValue,
+            totalTaxableValue,
             taxYear: taxYear || "Unknown",
             firstHalf: {
                 netTaxDue: netTaxDue.firstHalf,
@@ -291,18 +359,18 @@ async function getDetails(page, accountNumber) {
         };
     });
 
-    return {propertyDetails, taxData};
+    return { propertyDetails, taxData };
 }
 
-// Main flows starts from here
-const account_search = async (page, url, accountNumber) => {
+const account_search = async (page, url, account, county_config) => {
     try {
         await page.goto(url, { waitUntil: "networkidle2", ...timeout_option });
 
-        const {propertyDetails, taxData} = await getDetails(page, accountNumber);
-        const finalResult =   populateObject(accountNumber, propertyDetails, taxData);
+        // Pass county_config down the chain
+        const { propertyDetails, taxData } = await getDetails(page, account, county_config);
+        const finalResult = populateObject(account, propertyDetails, taxData, county_config);
+        
         return finalResult;
-
     } catch (error) {
         console.log("Error inside account_search:", error);
         throw new Error(error.message);
@@ -311,18 +379,26 @@ const account_search = async (page, url, accountNumber) => {
 
 const search = async (req, res) => {
     let { fetch_type, account } = req.body;
-    if (account) {
-        account = String(account).trim();
-    }
+    if (account) account = account.trim();
+
     try {
-        if (!fetch_type && (fetch_type != "html" || fetch_type != "api")) {
+        const req_county = req.path.replace(/\//g, "").toLowerCase();
+        if (!county_data[req_county]) {
+            return res.status(200).render('error_data', {
+                error: true,
+                message: "Invalid or unsupported county."
+            });
+        }
+
+        const county_config = county_data[req_county];
+        const url = county_config.url(account);
+
+        if (fetch_type !== "html" && fetch_type !== "api") {
             return res.status(200).render('error_data', {
                 error: true,
                 message: "Invalid Access"
             });
         }
-
-        const url = `https://delaware-auditor-ohio.manatron.com/Property.aspx?mpropertynumber=${account}`;
 
         const browser = await getBrowserInstance();
         const context = await browser.createBrowserContext();
@@ -340,12 +416,13 @@ const search = async (req, res) => {
             }
         });
 
-        if (fetch_type == "html") {
-            account_search(page, url, account)
+        if (fetch_type === "html") {
+            account_search(page, url, account, county_config, req_county)
                 .then((data) => {
                     res.status(200).render("parcel_data_official", data);
                 })
                 .catch((error) => {
+                    console.log(error);
                     res.status(200).render('error_data', {
                         error: true,
                         message: error.message
@@ -354,15 +431,13 @@ const search = async (req, res) => {
                 .finally(async () => {
                     await context.close();
                 });
-        }
-        else if (fetch_type == "api") {
-            account_search(page, url, account)
+        } else if (fetch_type === "api") {
+            account_search(page, url, account, county_config, req_county)
                 .then((data) => {
-                    res.status(200).json({
-                        result: data
-                    });
+                    res.status(200).json({ result: data });
                 })
                 .catch((error) => {
+                    console.log(error);
                     res.status(500).json({
                         error: true,
                         message: error.message
@@ -372,22 +447,21 @@ const search = async (req, res) => {
                     await context.close();
                 });
         }
-
     } catch (error) {
-        if (fetch_type == "html") {
+        console.log(error);
+        if (fetch_type === "html") {
             res.status(200).render('error_data', {
                 error: true,
                 message: error.message
             });
-        } else if (fetch_type == "api") {
+        } else if (fetch_type === "api") {
             res.status(500).json({
                 error: true,
                 message: error.message
             });
         }
     }
-}
-
-export {
-    search
 };
+
+export { search };
+
