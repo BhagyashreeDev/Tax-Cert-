@@ -5,6 +5,8 @@ import { search as butler_search } from "../controllers/OH/butler.controller.js"
 
 import {search as wyandot_search} from "../controllers/OH/wyandot.controller.js";
 
+import {search as delaware_search} from "../controllers/OH/delaware.controller.js";
+
 const route = express.Router();
 
 route.post("/greene", greene_search);
@@ -39,6 +41,8 @@ route.post("/butler", butler_search);
 route.post("/wyandot", wyandot_search);
 route.post("/noble", wyandot_search);
 route.post("/hardin", wyandot_search);
+
+route.post("/delaware", delaware_search);
 
 
 export default route;

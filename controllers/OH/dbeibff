@@ -17,7 +17,7 @@ function createPropertyObject() {
         total_assessed_value: "",
         exemption: "",
         total_taxable_value: "",
-        taxing_authority: "Wyandot County Treasurer, 109 S Sandusky Avenue, Room 22, Upper Sandusky, OH 43351",
+        taxing_authority: "Delaware County Treasurer, 145 N Union St, Delaware, OH 43015",
         notes: "",
         delinquent: "NONE",
         tax_history: [],
@@ -28,7 +28,7 @@ function createTaxHistory() {
     return {
         jurisdiction: "County",
         year: "",
-        payment_type: "Semi-Annual",
+        payment_type: "",
         status: "",
         base_amount: "",
         amount_paid: "",
@@ -50,7 +50,7 @@ const generate_notes = (year, keys, status1, status2) => {
                 : `PRIORS ARE DELINQUENT,`;
         notes += ` ${year} 1ST INSTALLMENT IS ${(status1).toUpperCase()}, 2ND INSTALLMENT IS ${(status2).toUpperCase()},`;
         notes += ` NORMALLY TAXES ARE PAID SEMI-ANNUALLY,`;
-        notes += ` NORMAL DUE DATES ARE 02/20 AND 07/17`;
+        notes += ` NORMAL DUE DATES ARE 02/10 AND 07/10`;
     } catch (error) {
         console.log(error);
     } finally {
@@ -58,62 +58,11 @@ const generate_notes = (year, keys, status1, status2) => {
     }
 };
 
-const formatCurrency = (val) => {
-    if (val === null || val === undefined || val === '') return '$0.00';
-    const num = parseFloat(String(val).replace(/[^0-9.-]/g, ''));
-    if (isNaN(num)) return '$0.00';
-    return `$${num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-};
-
-const parseCurrency = (str) => {
-    if (!str) return 0;
-    return parseFloat(String(str).replace(/[^0-9.-]/g, '')) || 0;
-};
-
-const formatDate = (dateStr) => {
-    if (!dateStr || dateStr === "N/A" || dateStr === "-") return "";
-    const clean = dateStr.trim();
-    const parts = clean.split('/');
-    if (parts.length === 3) {
-        const mm = parts[0].padStart(2, '0');
-        const dd = parts[1].padStart(2, '0');
-        let yyyy = parts[2];
-        if (yyyy.length === 2) yyyy = `20${yyyy}`;
-        return `${mm}/${dd}/${yyyy}`;
-    }
-    const d = new Date(dateStr);
-    if (!isNaN(d.getTime())) {
-        const mm = String(d.getMonth() + 1).padStart(2, '0');
-        const dd = String(d.getDate()).padStart(2, '0');
-        return `${mm}/${dd}/${d.getFullYear()}`;
-    }
-    return dateStr;
-};
-
-function setRecordStatus(record) {
-    if (record.amount_due === "$0.00") {
-        record.status = "Paid";
-    } else {
-        const today = new Date();
-        const dueDateObj = new Date(record.due_date);
-        if (today <= dueDateObj) {
-            record.status = "Due";
-        } else {
-            record.status = "Delinquent";
-        }
-    }
-}
-
 async function launchBrowser() {
     const browser = await puppeteer.launch({
         headless: false,
-        args: [
-            '--disable-gpu',
-            '--no-sandbox',
-            '--disable-setuid-sandbox',
-            '--lang="en-US"',
-            "--disable-features=HttpsFirstBalancedModeAutoEnable"
-        ],
+        defaultViewport: null,
+        args: ["--start-maximized"],
     });
 
     const page = await browser.newPage();
@@ -122,194 +71,58 @@ async function launchBrowser() {
     return { browser, page };
 }
 
-async function searchAccountNumber(accountNumber, page) {
-    const cleanAccount = accountNumber.replace(/[-.]/g, '');
-    const url = `http://realestate.co.wyandot.oh.us/re/re-chg.php?account=${cleanAccount}&rec=&detail=Y`;
-    try {
-        await page.goto(url, { waitUntil: "networkidle2", ...timeout_option });
-    } catch (err) {
-        console.log("Navigation note:", err?.message || err);
-    }
-}
-
-async function getDetails(page) {
-
-    const data = await page.evaluate(() => {
-        const rows = Array.from(document.querySelectorAll("#maintable tbody tr"));
-
-        const getCleanText = (row, selector = 'td:first-child') => {
-            const cell = row?.querySelector(selector);
-            return cell ? cell.textContent.replace(/\s+/g, ' ').trim() : '';
-        };
-
-        const ownerLine1 = getCleanText(rows[1]);
-        const addressLine1 = getCleanText(rows[3]);
-        const addressLine2 = getCleanText(rows[4]);
-        const assessedValue = getCleanText(rows[3], 'td:last-child');
-
-        const lastRow = rows[rows.length - 1];
-        const firstDue = getCleanText(lastRow, 'td:nth-child(3)');
-        const secondDue = getCleanText(lastRow, 'td:nth-child(4)');
-
-        return {
-            ownerName: `${ownerLine1}`.trim(),
-            propertyAddress: `${addressLine1}, ${addressLine2}`.trim(),
-            assessedValue,
-            firstDue,
-            secondDue
-        };
-    });
-
-    const taxData = await page.evaluate(() => {
-        const rows = Array.from(document.querySelectorAll('#maintable2 tbody tr'));
-
-        const getCleanText = (row, selector) => {
-            const cell = row?.querySelector(selector);
-            return cell ? cell.textContent.replace(/\s+/g, ' ').trim() : '0.00';
-        };
-
-        return {
-            firstInstallment: {
-                charge: getCleanText(rows[1], 'td:nth-child(4)'),
-                credit: getCleanText(rows[2], 'td:nth-child(4)'),
-                remitter: getCleanText(rows[3], 'td:nth-child(4)')
-            },
-            secondInstallment: {
-                charge: getCleanText(rows[1], 'td:nth-child(6)'),
-                credit: getCleanText(rows[2], 'td:nth-child(6)'),
-                remitter: getCleanText(rows[3], 'td:nth-child(6)')
-            }
-        };
-    });
-
-    const paymentData = await page.evaluate(() => {
-        const getCleanText = (row, selector) => {
-            const cell = row?.querySelector(selector);
-            return cell ? cell.textContent.replace(/\s+/g, ' ').trim() : '';
-        };
-
-        const paymentTable = Array.from(document.querySelectorAll('table#maintable2'))
-            .find(table => table.textContent.includes('Payment Information'));
-
-        if (!paymentTable) return [];
-
-        const dataRows = Array.from(paymentTable.querySelectorAll('tbody tr'))
-            .filter(row => row.querySelectorAll('td').length >= 2);
-
-        return dataRows.map(row => ({
-            date: getCleanText(row, 'td:nth-child(1)'),
-            amount: getCleanText(row, 'td:nth-child(2)')
-        }));
-    });
-
-    let taxYear = '';
-    try {
-        await page.waitForSelector('#history a', { timeout: 10000 });
-        await Promise.all([
-            page.waitForNavigation({ waitUntil: 'domcontentloaded' }),
-            page.click('#history a')
-        ]);
-
-        const taxYearEl = await page.$('#maintable tbody tr:nth-child(2) td:first-child');
-        if (taxYearEl) {
-            taxYear = await page.evaluate(el => el.textContent.replace(/\s+/g, ' ').trim(), taxYearEl);
-        }
-    }
-    catch (err) {
-        // Silently catch the timeout/navigation error and proceed with taxYear = ''
-    }
-
-    // Always return the data, regardless of try/catch outcomes
-    return {
-        ...data,
-        ...taxData,
-        paymentData: paymentData,
-        taxYear: taxYear || ''
-    };
-}
-
-
-
-async function populateTheObject(data) {
+function populateObject(accountNumber, propData, taxData) {
     const result = createPropertyObject();
-    result.owner_name.push(data.ownerName);
-    result.property_address = data.propertyAddress;
-    result.total_assessed_value = formatCurrency(data.assessedValue);
+
+    result.parcel_number = accountNumber;
+    
+    if (propData.ownerName) {
+        result.owner_name = propData.ownerName.split("&").map(name => name.trim());
+    }
+    result.property_address = propData.propertyAddress || "";
+    result.total_assessed_value = taxData.totalAssessedValue || "";
     result.total_taxable_value = result.total_assessed_value;
 
-    // Check if installment data actually exists before populating tax_history
-    const hasInstallmentData =
-        data.firstInstallment &&
-        data.secondInstallment &&
-        (parseCurrency(data.firstInstallment.charge) > 0 ||
-            parseCurrency(data.secondInstallment.charge) > 0 ||
-            parseCurrency(data.firstInstallment.credit) > 0 ||
-            parseCurrency(data.secondInstallment.credit) > 0);
+    if (taxData.taxYear !== "Unknown") {
+        const dueYear = parseInt(taxData.taxYear, 10) + 1;
 
-    if (!hasInstallmentData || !data.taxYear) {
-        // Keep tax_history empty when no installment data exists
-        result.tax_history = [];
-        return result;
+        const inst1 = createTaxHistory();
+        inst1.year = taxData.taxYear;
+        inst1.payment_type = "Installment 1";
+        inst1.base_amount = taxData.firstHalf.netTaxDue || "";
+        inst1.amount_paid = taxData.firstHalf.totalPaid || "";
+        inst1.amount_due = taxData.firstHalf.balanceDue || "";
+        inst1.due_date = `02/10/${dueYear}`;
+        inst1.delq_date = `02/11/${dueYear}`;
+        inst1.paid_date = taxData.firstHalf.paidDate !== "Not Paid / Not Found" ? taxData.firstHalf.paidDate : "";
+
+        const inst2 = createTaxHistory();
+        inst2.year = taxData.taxYear;
+        inst2.payment_type = "Installment 2";
+        inst2.base_amount = taxData.secondHalf.netTaxDue || "";
+        inst2.amount_paid = taxData.secondHalf.totalPaid || "";
+        inst2.amount_due = taxData.secondHalf.balanceDue || "";
+        inst2.due_date = `07/10/${dueYear}`;
+        inst2.delq_date = `07/11/${dueYear}`;
+        inst2.paid_date = taxData.secondHalf.paidDate !== "Not Paid / Not Found" ? taxData.secondHalf.paidDate : "";
+
+        result.tax_history.push(inst1, inst2);
     }
 
-    const nxtYear = parseInt(data.taxYear, 10) + 1;
+    result.tax_history.forEach((record) => {
+        if (record.amount_due === "$0.00") {
+            record.status = "Paid";
+        } else {
+            const today = new Date();
+            const dueDateObj = new Date(record.due_date);
 
-    const record1 = createTaxHistory();
-    record1.payment_type = "Installment 1";
-    record1.year = data.taxYear;
-    record1.base_amount = formatCurrency(data.firstInstallment.charge);
-    record1.amount_paid = formatCurrency(data.firstInstallment.credit);
-    record1.amount_due = data.firstDue === "$.00" ? "$0.00" : formatCurrency(data.firstDue);
-    record1.due_date = `02/20/${nxtYear}`;
-    record1.delq_date = `02/21/${nxtYear}`;
-    setRecordStatus(record1);
-
-    const record2 = createTaxHistory();
-    record2.payment_type = "Installment 2";
-    record2.year = data.taxYear;
-    record2.base_amount = formatCurrency(data.secondInstallment.charge);
-    record2.amount_paid = formatCurrency(data.secondInstallment.credit);
-    record2.amount_due = data.secondDue === "$.00" ? "$0.00" : formatCurrency(data.secondDue);
-    record2.due_date = `07/17/${nxtYear}`;
-    record2.delq_date = `07/18/${nxtYear}`;
-    setRecordStatus(record2);
-
-    const paid1 = parseCurrency(record1.amount_paid);
-    const paid2 = parseCurrency(record2.amount_paid);
-    const sumOfPaidAmount = +(paid1 + paid2).toFixed(2);
-    const isPaid1 = paid1 > 0;
-    const isPaid2 = paid2 > 0;
-    // Filter valid payments (exclude 'remitter' text, zero amounts, and invalid dates)
-    // and sort chronologically (earliest to latest)
-    const validPayments = (data.paymentData || [])
-        .filter(p => p && p.date && /\d/.test(p.date) && parseCurrency(p.amount) > 0)
-        .sort((a, b) => new Date(a.date) - new Date(b.date));
-    let paidDate1 = "";
-    let paidDate2 = "";
-
-    const combinedPayment = isPaid1 && isPaid2 && validPayments.find(p =>
-        Math.abs(parseCurrency(p.amount) - sumOfPaidAmount) < 0.01
-    );
-    if (combinedPayment) {
-        // Both installments were paid together in this single combined payment
-        const singleDate = formatDate(combinedPayment.date);
-        paidDate1 = singleDate;
-        paidDate2 = singleDate;
-    } else {
-        // 2. PAID ON DIFFERENT DATES (Image 1) OR ONLY ONE INSTALLMENT PAID
-        // Match each installment by its exact amount paid
-        const match1 = validPayments.find(p => Math.abs(parseCurrency(p.amount) - paid1) < 0.01);
-        const match2 = validPayments.find(p => p !== match1 && Math.abs(parseCurrency(p.amount) - paid2) < 0.01);
-        if (match1 && match2) {
-            paidDate1 = formatDate(match1.date);
-            paidDate2 = formatDate(match2.date);
+            if (today <= dueDateObj) {
+                record.status = "Due";
+            } else {
+                record.status = "Delinquent";
+            }
         }
-    }
-
-    record1.paid_date = isPaid1 ? paidDate1 : "";
-    record2.paid_date = isPaid2 ? paidDate2 : "";
-
-    result.tax_history.push(record1, record2);
+    });
 
     result.tax_history.sort((a, b) => {
         const yearA = parseInt(a.year, 10) || 0;
@@ -323,53 +136,188 @@ async function populateTheObject(data) {
     });
 
     if (result.tax_history.length > 0) {
-        // Check if ANY tax is delinquent for the main delinquency flag
         const hasDelinquent = result.tax_history.some(
-            (t) => t.status === "DELINQUENT",
+            (t) => t.status.toUpperCase() === "DELINQUENT"
         );
+        
         result.delinquent = hasDelinquent
             ? "TAXES ARE DELINQUENT, NEED TO CALL FOR PAYOFF"
             : "NONE";
 
-        // Get the latest tax record (the array is sorted ascending by year)
         const latestTax = result.tax_history[result.tax_history.length - 1];
-
-        // Find individual statuses for the 1st and 2nd installments of the latest year
         const latestYearRecords = result.tax_history.filter(t => String(t.year) === String(latestTax.year));
+        
         const inst1 = latestYearRecords.find(t => t.payment_type === "Installment 1");
         const inst2 = latestYearRecords.find(t => t.payment_type === "Installment 2");
 
         const status1 = inst1 ? inst1.status : "UNKNOWN";
         const status2 = inst2 ? inst2.status : "UNKNOWN";
 
-        // Check if any PRIOR year is delinquent (exclude the latest year)
         const hasPriorDelinquent = result.tax_history.some(
-            (t) => t.status === "DELINQUENT" && String(t.year) !== String(latestTax.year)
+            (t) => t.status.toUpperCase() === "DELINQUENT" && String(t.year) !== String(latestTax.year)
         );
 
-        // If priors are delinquent, keys = 0. If priors are paid, keys = 1.
         const keys = hasPriorDelinquent ? 0 : 1;
         result.notes = generate_notes(latestTax.year, keys, status1, status2);
     }
+
     return result;
 }
 
+async function getDetails(page, accountNumber) {
+    // 1. Verify Property Exists before scraping
+    try {
+        await page.waitForSelector("td.ui-state-default", { timeout: 10000 });
+    } catch (error) {
+        console.log(`No property found for account number: ${accountNumber}`);
+        return null; // Exit early
+    }
+
+    // 2. Extract General Property Details
+    const propertyDetails = await page.evaluate(() => {
+        const getValueByLabel = (labelText) => {
+            const cells = Array.from(document.querySelectorAll("td.ui-state-default"));
+            const targetCell = cells.find(td => td.textContent.trim() === labelText);
+            if (targetCell && targetCell.nextElementSibling) {
+                return targetCell.nextElementSibling.textContent.trim().replace(/\s+/g, " ");
+            }
+            return null;
+        };
+
+        const getPropertyAddress = () => {
+            const cells = Array.from(document.querySelectorAll("td.ui-state-default"));
+            const labelCell = cells.find(td => td.textContent.trim() === "Property Address:");
+            if (labelCell && labelCell.parentElement && labelCell.parentElement.nextElementSibling) {
+                const addressCell = labelCell.parentElement.nextElementSibling.querySelector("td");
+                return addressCell ? addressCell.textContent.trim().replace(/\s+/g, " ") : null;
+            }
+            return null;
+        };
+
+        return {
+            ownerName: getValueByLabel("Owner Name"),
+            propertyAddress: getPropertyAddress(),
+        };
+    });
+
+    // 3. Navigate to the Tax page
+    await page.goto(
+        `https://delaware-auditor-ohio.manatron.com/Tax.aspx?mpropertynumber=${accountNumber}`,
+        { waitUntil: "networkidle2", ...timeout_option }
+    );
+
+    // Verify Tax Data Exists
+    try {
+        await page.waitForSelector("td.ui-state-default", { timeout: 10000 });
+    } catch (error) {
+        console.log(`No tax data found for account number: ${accountNumber}`);
+        return null;
+    }
+
+    // 4. Extract Tax Details
+    const taxData = await page.evaluate(() => {
+        const clean = (str) => (str ? str.trim().replace(/\s+/g, " ") : null);
+        const tds = Array.from(document.querySelectorAll("td.ui-state-default"));
+
+        const getValueByTdLabel = (label) => {
+            const targetTd = tds.find(td => td.textContent.trim() === label && td.nextElementSibling && td.nextElementSibling.textContent.includes("$"));
+            return targetTd ? clean(targetTd.nextElementSibling.textContent) : null;
+        };
+
+        const landValue = getValueByTdLabel("Land");
+        const improvementsValue = getValueByTdLabel("Improvements");
+        const totalAssessedValue = getValueByTdLabel("Total");
+
+        const getTaxRowValues = (rowLabel) => {
+            const labelTd = tds.find(td => td.textContent.trim() === rowLabel);
+            if (labelTd && labelTd.parentElement) {
+                const cells = labelTd.parentElement.children;
+                return {
+                    firstHalf: cells.length > 3 ? clean(cells[3].textContent) : null,
+                    secondHalf: cells.length > 5 ? clean(cells[5].textContent) : null,
+                };
+            }
+            return { firstHalf: null, secondHalf: null };
+        };
+
+        const netTaxDue = getTaxRowValues("Net Tax Due");
+        const totalPaid = getTaxRowValues("Total Paid");
+        const balanceDue = getTaxRowValues("Balance Due");
+
+        let firstHalfPaidDate = null;
+        let secondHalfPaidDate = null;
+        let taxYear = null;
+
+        const headers = Array.from(document.querySelectorAll("th"));
+        const dateHeader = headers.find(th => th.textContent.trim() === "Date");
+
+        if (dateHeader) {
+            const paymentTable = dateHeader.closest("table");
+            const paymentRows = Array.from(paymentTable.querySelectorAll("tbody tr"));
+
+            for (const row of paymentRows) {
+                const cells = row.children;
+                if (cells.length >= 5) {
+                    const date = clean(cells[0].textContent);
+                    const halfStr = clean(cells[1].textContent);
+                    const amount1stHalf = clean(cells[3].textContent);
+                    const amount2ndHalf = clean(cells[4].textContent);
+
+                    if (!firstHalfPaidDate && totalPaid.firstHalf && totalPaid.firstHalf !== "$0.00" && amount1stHalf === totalPaid.firstHalf) {
+                        firstHalfPaidDate = date;
+                        if (halfStr && !taxYear) {
+                            const yearPart = halfStr.split("-")[1];
+                            if (yearPart) taxYear = "20" + yearPart;
+                        }
+                    }
+
+                    if (!secondHalfPaidDate && totalPaid.secondHalf && totalPaid.secondHalf !== "$0.00" && amount2ndHalf === totalPaid.secondHalf) {
+                        secondHalfPaidDate = date;
+                        if (halfStr && !taxYear) {
+                            const yearPart = halfStr.split("-")[1];
+                            if (yearPart) taxYear = "20" + yearPart;
+                        }
+                    }
+                }
+            }
+        }
+
+        return {
+            landValue,
+            improvementsValue,
+            totalAssessedValue,
+            taxYear: taxYear || "Unknown",
+            firstHalf: {
+                netTaxDue: netTaxDue.firstHalf,
+                totalPaid: totalPaid.firstHalf,
+                balanceDue: balanceDue.firstHalf,
+                paidDate: firstHalfPaidDate || "Not Paid / Not Found",
+            },
+            secondHalf: {
+                netTaxDue: netTaxDue.secondHalf,
+                totalPaid: totalPaid.secondHalf,
+                balanceDue: balanceDue.secondHalf,
+                paidDate: secondHalfPaidDate || "Not Paid / Not Found",
+            },
+        };
+    });
+
+    return {propertyDetails, taxData};
+}
 
 async function run(accountNumber) {
-    let browser;
+    let browser, page;
     try {
-        const launched = await launchBrowser();
-        browser = launched.browser;
-        const page = launched.page;
+        ({ browser, page } = await launchBrowser());
 
-        await searchAccountNumber(accountNumber, page);
-        const data = await getDetails(page);
-        const result = await populateTheObject(data);
-        if (result) {
-            result.parcel_number = accountNumber;
-        }
-        console.log(JSON.stringify(result, null, 2));
-        return result;
+        await page.goto(
+            `https://delaware-auditor-ohio.manatron.com/Property.aspx?mpropertynumber=${accountNumber}`,
+            { waitUntil: "networkidle2", ...timeout_option }
+        );
+
+        const {propertyDetails, taxData} = await getDetails(page, accountNumber);
+        const finalResult = populateObject(accountNumber, propertyDetails, taxData);
+        return finalResult;
 
     } catch (err) {
         console.log("Error during running sequence execution pipeline: ", err);
@@ -378,4 +326,5 @@ async function run(accountNumber) {
     }
 }
 
-run("12-017002.0000");  
+// Execute
+run("618-131-21-008-000");
