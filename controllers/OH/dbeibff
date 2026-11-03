@@ -17,8 +17,7 @@ function createPropertyObject() {
         total_assessed_value: "",
         exemption: "",
         total_taxable_value: "",
-        taxing_authority: "",
-        notes: "",
+        taxing_authority: "Hamilton County Treasurer, 138 E. Court St., Cincinnati, OH 45202",
         delinquent: "NONE",
         tax_history: [],
     };
@@ -71,59 +70,217 @@ async function launchBrowser() {
     return { browser, page };
 }
 
-function populateObject(accountNumber, propData, taxData) {
-    const result = createPropertyObject();
+async function searchAccountNumber(accountNumber, page) {
+    await page.waitForSelector("#tab-search-parcel-id", timeout_option);
+    await page.click("#tab-search-parcel-id");
 
-    result.parcel_number = accountNumber;
+    await page.waitForSelector("#partial-number", timeout_option);
+    await page.type("#partial-number", accountNumber);
+
+    const submitBtnSelector = "#search-parcel-id button[type='submit']";
+
+    await page.waitForSelector(submitBtnSelector, { visible: true, ...timeout_option });
+
+    await Promise.all([
+        page.waitForNavigation({ waitUntil: "networkidle2", ...timeout_option }),
+        page.click(submitBtnSelector)
+    ]);
+}
+
+async function getDetails(page) {
+    const propertyData = await page.evaluate(() => {
+        const getHeaderValue = (labelName) => {
+            const dtElements = Array.from(document.querySelectorAll('#property-page dl dt'));
+            const targetDt = dtElements.find(dt => dt.textContent.trim() === labelName);
+            return targetDt ? targetDt.nextElementSibling.textContent.trim() : null;
+        };
+
+        const getTableValue = (labelName) => {
+            const boldDivs = Array.from(document.querySelectorAll('#property-content div.font-bold'));
+            const targetDiv = boldDivs.find(div => div.textContent.trim() === labelName);
+            return targetDiv ? targetDiv.nextElementSibling.textContent.trim() : null;
+        };
+
+        const rawOwnerBlock = getTableValue('Owner Name and Address');
+        const ownerName = rawOwnerBlock ? rawOwnerBlock.split('\n')[0].trim() : null;
+
+        const rawTaxYear = getHeaderValue('Tax Year');
+        const taxYear = rawTaxYear ? rawTaxYear.split('Payable')[0].trim() : null;
+
+        return {
+            ownerName: ownerName,
+            propertyAddress: getHeaderValue('Address'),
+            totalAssessedValue: getTableValue('Assessed Value'),
+            taxYear: taxYear
+        };
+    });
     
-    if (propData.ownerName) {
-        result.owner_name = propData.ownerName.split("&").map(name => name.trim());
-    }
-    result.property_address = propData.propertyAddress || "N/A";
-    result.total_assessed_value = taxData.totalAssessedValue || "N/A";
-    result.total_taxable_value = taxData.totalTaxableValue || "N/A";
+    return propertyData;
+}
 
-    if (taxData.taxYear !== "Unknown") {
-        const dueYear = parseInt(taxData.taxYear, 10) + 1;
+async function getPaymentDetails(page) {
+    const paymentData = await page.evaluate(() => {
+        const getTableByCaption = (captionText) => {
+            return Array.from(document.querySelectorAll('table')).find(t => {
+                const cap = t.querySelector('caption');
+                return cap && cap.textContent.trim().includes(captionText);
+            });
+        };
 
-        const inst1 = createTaxHistory();
-        inst1.year = taxData.taxYear;
-        inst1.payment_type = "Installment 1";
-        inst1.base_amount = taxData.firstHalf.netTaxDue || "";
-        inst1.amount_paid = taxData.firstHalf.totalPaid || "";
-        inst1.amount_due = taxData.firstHalf.balanceDue || "";
-        inst1.due_date = `02/10/${dueYear}`;
-        inst1.delq_date = `02/11/${dueYear}`;
-        inst1.paid_date = taxData.firstHalf.paidDate !== "Not Paid / Not Found" ? taxData.firstHalf.paidDate : "";
+        let paymentInfo = {
+            landValue: null,
+            improvements: null,
+            totalTaxableValue: null,
+            firstHalfSubtotal: null,
+            secondHalfSubtotal: null,
+            totalPaidFirstHalf: null,
+            totalPaidSecondHalf: null,
+            totalOwedFirstHalf: null,
+            totalOwedSecondHalf: null,
+            firstHalfPaymentDate: null,
+            secondHalfPaymentDate: null
+        };
 
-        const inst2 = createTaxHistory();
-        inst2.year = taxData.taxYear;
-        inst2.payment_type = "Installment 2";
-        inst2.base_amount = taxData.secondHalf.netTaxDue || "";
-        inst2.amount_paid = taxData.secondHalf.totalPaid || "";
-        inst2.amount_due = taxData.secondHalf.balanceDue || "";
-        inst2.due_date = `07/10/${dueYear}`;
-        inst2.delq_date = `07/11/${dueYear}`;
-        inst2.paid_date = taxData.secondHalf.paidDate !== "Not Paid / Not Found" ? taxData.secondHalf.paidDate : "";
+        // Extract Taxable Value (Land, Improvements, Total)
+        const taxableTable = getTableByCaption('Taxable Value');
+        if (taxableTable) {
+            const rows = Array.from(taxableTable.querySelectorAll('tbody tr'));
+            rows.forEach(r => {
+                const th = r.querySelector('th');
+                const td = r.querySelector('td');
+                if (th && td) {
+                    const text = th.textContent.trim();
+                    if (text === 'Land') paymentInfo.landValue = td.textContent.trim();
+                    if (text === 'Improvements') paymentInfo.improvements = td.textContent.trim();
+                    if (text === 'Total') paymentInfo.totalTaxableValue = td.textContent.trim();
+                }
+            });
+        }
 
-        result.tax_history.push(inst1, inst2);
-    }
+        // Extract Tax Detail (Subtotals, Paid, Owed)
+        const taxTable = getTableByCaption('Current Year Tax Detail');
+        if (taxTable) {
+            const rows = Array.from(taxTable.querySelectorAll('tbody tr'));
+            
+            // Subtotal
+            const subtotalRows = rows.filter(r => r.querySelector('th') && r.querySelector('th').textContent.trim() === 'Subtotal');
+            if (subtotalRows.length > 0) {
+                const targetSubRow = subtotalRows[subtotalRows.length - 1]; 
+                const tds = targetSubRow.querySelectorAll('td');
+                if (tds.length >= 5) {
+                    paymentInfo.firstHalfSubtotal = tds[2].textContent.trim();
+                    paymentInfo.secondHalfSubtotal = tds[4].textContent.trim();
+                }
+            }
 
-    result.tax_history.forEach((record) => {
-        if (record.amount_due === "$0.00") {
-            record.status = "Paid";
-        } else {
-            const today = new Date();
-            const dueDateObj = new Date(record.due_date);
+            // Total Paid
+            const totalPaidRow = rows.find(r => r.querySelector('th') && r.querySelector('th').textContent.trim() === 'Total Paid');
+            if (totalPaidRow) {
+                const tds = totalPaidRow.querySelectorAll('td');
+                paymentInfo.totalPaidFirstHalf = tds[2].textContent.trim();
+                paymentInfo.totalPaidSecondHalf = tds[4].textContent.trim();
+            }
 
-            if (today <= dueDateObj) {
-                record.status = "Due";
-            } else {
-                record.status = "Delinquent";
+            // Total Owed
+            const totalOwedRow = rows.find(r => r.querySelector('th') && r.querySelector('th').textContent.trim() === 'Total Owed');
+            if (totalOwedRow) {
+                const tds = totalOwedRow.querySelectorAll('td');
+                paymentInfo.totalOwedFirstHalf = tds[2].textContent.trim();
+                paymentInfo.totalOwedSecondHalf = tds[4].textContent.trim();
             }
         }
+
+        // Extract Payment Dates
+        const historyTable = getTableByCaption('Payment Information for Current And Prior Year');
+        if (historyTable) {
+            const rows = Array.from(historyTable.querySelectorAll('tbody tr'));
+            
+            for (const row of rows) {
+                const tds = row.querySelectorAll('td');
+                if (tds.length >= 5) {
+                    const date = tds[0].textContent.trim();
+                    const p1stHalf = tds[3].textContent.trim();
+                    const p2ndHalf = tds[4].textContent.trim();
+
+                    if (paymentInfo.totalPaidFirstHalf && paymentInfo.totalPaidFirstHalf !== '$0.00' && 
+                        p1stHalf === paymentInfo.totalPaidFirstHalf && !paymentInfo.firstHalfPaymentDate) {
+                        paymentInfo.firstHalfPaymentDate = date;
+                    }
+
+                    if (paymentInfo.totalPaidSecondHalf && paymentInfo.totalPaidSecondHalf !== '$0.00' && 
+                        p2ndHalf === paymentInfo.totalPaidSecondHalf && !paymentInfo.secondHalfPaymentDate) {
+                        paymentInfo.secondHalfPaymentDate = date;
+                    }
+                }
+            }
+        }
+
+        return paymentInfo;
     });
 
+    return paymentData;
+}
+
+function determineStatus(record) {
+    if (record.amount_due === "$0.00" || !record.amount_due) {
+        record.status = "Paid";
+    } else {
+        const today = new Date();
+        const dueDateObj = new Date(record.due_date);
+
+        if (today <= dueDateObj) {
+            record.status = "Due";
+        } else {
+            record.status = "Delinquent";
+        }
+    }
+}
+
+function populateObject(summary, payment, accountNumber) {
+    const result = createPropertyObject();
+
+    // Base info
+    result.processed_date = new Date().toLocaleDateString("en-US");
+    result.owner_name = summary.ownerName ? [summary.ownerName] : [];
+    result.property_address = summary.propertyAddress || "";
+    result.parcel_number = accountNumber;
+    
+    // Value info
+    result.land_value = payment.landValue || "";
+    result.improvements = payment.improvements || "";
+    result.total_assessed_value = summary.totalAssessedValue || "";
+    result.total_taxable_value = payment.totalTaxableValue || "";
+
+    const taxYearStr = summary.taxYear || "2025";
+    const payableYear = parseInt(taxYearStr, 10) + 1; // e.g. 2025 payable in 2026
+
+    // Installment 1
+    const inst1 = createTaxHistory();
+    inst1.year = taxYearStr;
+    inst1.payment_type = "Installment 1";
+    inst1.base_amount = payment.firstHalfSubtotal || "$0.00";
+    inst1.amount_paid = payment.totalPaidFirstHalf || "$0.00";
+    inst1.amount_due = payment.totalOwedFirstHalf || "$0.00";
+    inst1.paid_date = payment.firstHalfPaymentDate || "";
+    inst1.due_date = `02/10/${payableYear}`;
+    inst1.delq_date = `02/11/${payableYear}`;
+    determineStatus(inst1);
+    result.tax_history.push(inst1);
+
+    // Installment 2
+    const inst2 = createTaxHistory();
+    inst2.year = taxYearStr;
+    inst2.payment_type = "Installment 2";
+    inst2.base_amount = payment.secondHalfSubtotal || "$0.00";
+    inst2.amount_paid = payment.totalPaidSecondHalf || "$0.00";
+    inst2.amount_due = payment.totalOwedSecondHalf || "$0.00";
+    inst2.paid_date = payment.secondHalfPaymentDate || "";
+    inst2.due_date = `07/24/${payableYear}`;
+    inst2.delq_date = `07/25/${payableYear}`;
+    determineStatus(inst2);
+    result.tax_history.push(inst2);
+
+    // Sort the tax history
     result.tax_history.sort((a, b) => {
         const yearA = parseInt(a.year, 10) || 0;
         const yearB = parseInt(b.year, 10) || 0;
@@ -135,6 +292,7 @@ function populateObject(accountNumber, propData, taxData) {
         return 0;
     });
 
+    // Notes and Delinquent Logic
     if (result.tax_history.length > 0) {
         const hasDelinquent = result.tax_history.some(
             (t) => t.status.toUpperCase() === "DELINQUENT"
@@ -147,11 +305,11 @@ function populateObject(accountNumber, propData, taxData) {
         const latestTax = result.tax_history[result.tax_history.length - 1];
         const latestYearRecords = result.tax_history.filter(t => String(t.year) === String(latestTax.year));
         
-        const inst1 = latestYearRecords.find(t => t.payment_type === "Installment 1");
-        const inst2 = latestYearRecords.find(t => t.payment_type === "Installment 2");
+        const i1 = latestYearRecords.find(t => t.payment_type === "Installment 1");
+        const i2 = latestYearRecords.find(t => t.payment_type === "Installment 2");
 
-        const status1 = inst1 ? inst1.status : "UNKNOWN";
-        const status2 = inst2 ? inst2.status : "UNKNOWN";
+        const status1 = i1 ? i1.status : "UNKNOWN";
+        const status2 = i2 ? i2.status : "UNKNOWN";
 
         const hasPriorDelinquent = result.tax_history.some(
             (t) => t.status.toUpperCase() === "DELINQUENT" && String(t.year) !== String(latestTax.year)
@@ -164,184 +322,43 @@ function populateObject(accountNumber, propData, taxData) {
     return result;
 }
 
-async function getDetails(page, accountNumber) {
-    // 1. Verify Property Exists before scraping
-    try {
-        await page.waitForSelector("td.ui-state-default", { timeout: 10000 });
-    } catch (error) {
-        console.log(`No property found for account number: ${accountNumber}`);
-        return null; // Exit early
-    }
-
-    // 2. Extract General Property Details
-    const propertyDetails = await page.evaluate(() => {
-        const getValueByLabel = (labelText) => {
-            const cells = Array.from(document.querySelectorAll("td.ui-state-default"));
-            const targetCell = cells.find(td => td.textContent.trim() === labelText);
-            if (targetCell && targetCell.nextElementSibling) {
-                return targetCell.nextElementSibling.textContent.trim().replace(/\s+/g, " ");
-            }
-            return null;
-        };
-
-        const getPropertyAddress = () => {
-            const cells = Array.from(document.querySelectorAll("td.ui-state-default"));
-            const labelCell = cells.find(td => td.textContent.trim() === "Property Address:");
-            if (labelCell && labelCell.parentElement && labelCell.parentElement.nextElementSibling) {
-                const addressCell = labelCell.parentElement.nextElementSibling.querySelector("td");
-                return addressCell ? addressCell.textContent.trim().replace(/\s+/g, " ") : null;
-            }
-            return null;
-        };
-
-        return {
-            ownerName: getValueByLabel("Owner Name"),
-            propertyAddress: getPropertyAddress(),
-        };
-    });
-
-    // 3. Navigate to the Tax page
-    await page.goto(
-        `https://oh-columbiana-auditor.publicaccessnow.com/Tax.aspx?mpropertynumber=${accountNumber}`,
-        { waitUntil: "networkidle2", ...timeout_option }
-    );
-
-    // Verify Tax Data Exists
-    try {
-        await page.waitForSelector("td.ui-state-default", { timeout: 10000 });
-    } catch (error) {
-        console.log(`No tax data found for account number: ${accountNumber}`);
-        return null;
-    }
-
-    // 4. Extract Tax Details
-    const taxData = await page.evaluate(() => {
-        const clean = (str) => (str ? str.trim().replace(/\s+/g, " ") : null);
-        const tds = Array.from(document.querySelectorAll("td.ui-state-default"));
-
-        const getValueByTdLabel = (label) => {
-            const targetTd = tds.find(td => td.textContent.trim() === label && td.nextElementSibling && td.nextElementSibling.textContent.includes("$"));
-            return targetTd ? clean(targetTd.nextElementSibling.textContent) : null;
-        };
-
-        const landValue = getValueByTdLabel("Land");
-        const improvementsValue = getValueByTdLabel("Improvements");
-
-        const totalTds = tds.filter(td => td.textContent.trim() === "Total" && td.nextElementSibling && td.nextElementSibling.textContent.includes("$"));
-        
-        let totalAssessedValue = null;
-        let totalTaxableValue = null;
-
-        if (totalTds.length >= 2) {
-            // If 2 or more totals exist: Assessed is typically first, Taxable is second
-            totalAssessedValue = clean(totalTds[0].nextElementSibling.textContent);
-            totalTaxableValue = clean(totalTds[1].nextElementSibling.textContent);
-        } else if (totalTds.length === 1) {
-            // If only 1 total is found (varies by county): assign it to both
-            totalAssessedValue = clean(totalTds[0].nextElementSibling.textContent);
-            totalTaxableValue = clean(totalTds[0].nextElementSibling.textContent);
-        }
-
-        const getTaxRowValues = (rowLabel) => {
-            const labelTd = tds.find(td => td.textContent.trim() === rowLabel);
-            if (labelTd && labelTd.parentElement) {
-                const cells = labelTd.parentElement.children;
-                return {
-                    firstHalf: cells.length > 3 ? clean(cells[3].textContent) : null,
-                    secondHalf: cells.length > 5 ? clean(cells[5].textContent) : null,
-                };
-            }
-            return { firstHalf: null, secondHalf: null };
-        };
-
-        const netTaxDue = getTaxRowValues("Net Tax Due");
-        const totalPaid = getTaxRowValues("Total Paid");
-        const balanceDue = getTaxRowValues("Balance Due");
-
-        let firstHalfPaidDate = null;
-        let secondHalfPaidDate = null;
-        let taxYear = null;
-
-        const headers = Array.from(document.querySelectorAll("th"));
-        const dateHeader = headers.find(th => th.textContent.trim() === "Date");
-
-        if (dateHeader) {
-            const paymentTable = dateHeader.closest("table");
-            const paymentRows = Array.from(paymentTable.querySelectorAll("tbody tr"));
-
-            for (const row of paymentRows) {
-                const cells = row.children;
-                if (cells.length >= 5) {
-                    const date = clean(cells[0].textContent);
-                    const halfStr = clean(cells[1].textContent);
-                    const amount1stHalf = clean(cells[3].textContent);
-                    const amount2ndHalf = clean(cells[4].textContent);
-
-                    if (!firstHalfPaidDate && totalPaid.firstHalf && totalPaid.firstHalf !== "$0.00" && amount1stHalf === totalPaid.firstHalf) {
-                        firstHalfPaidDate = date;
-                        if (halfStr && !taxYear) {
-                            const yearPart = halfStr.split("-")[1];
-                            if (yearPart) taxYear = "20" + yearPart;
-                        }
-                    }
-
-                    if (!secondHalfPaidDate && totalPaid.secondHalf && totalPaid.secondHalf !== "$0.00" && amount2ndHalf === totalPaid.secondHalf) {
-                        secondHalfPaidDate = date;
-                        if (halfStr && !taxYear) {
-                            const yearPart = halfStr.split("-")[1];
-                            if (yearPart) taxYear = "20" + yearPart;
-                        }
-                    }
-                }
-            }
-        }
-
-        return {
-            landValue,
-            improvementsValue,
-            totalAssessedValue,
-            totalTaxableValue,
-            taxYear: taxYear || "Unknown",
-            firstHalf: {
-                netTaxDue: netTaxDue.firstHalf,
-                totalPaid: totalPaid.firstHalf,
-                balanceDue: balanceDue.firstHalf,
-                paidDate: firstHalfPaidDate || "Not Paid / Not Found",
-            },
-            secondHalf: {
-                netTaxDue: netTaxDue.secondHalf,
-                totalPaid: totalPaid.secondHalf,
-                balanceDue: balanceDue.secondHalf,
-                paidDate: secondHalfPaidDate || "Not Paid / Not Found",
-            },
-        };
-    });
-
-    // 5. Populate and format the final object
-    const finalResult = populateObject(accountNumber, propertyDetails, taxData);
-    console.log(JSON.stringify(finalResult, null, 2));
-    
-    return finalResult;
-}
-
 async function run(accountNumber) {
     let browser, page;
     try {
         ({ browser, page } = await launchBrowser());
 
         await page.goto(
-            `https://oh-columbiana-auditor.publicaccessnow.com/Property.aspx?mpropertynumber=${accountNumber}`,
+            "https://wedge3.hcauditor.org/",
             { waitUntil: "networkidle2", ...timeout_option }
         );
 
-        await getDetails(page, accountNumber);
+        // 1. Search and get summary page details
+        await searchAccountNumber(accountNumber, page);
+        const propertySummary = await getDetails(page);
+
+        let finalOutput = {};
+
+        if (propertySummary.taxYear) {
+            // 2. Format account number and construct URL
+            const cleanAccountNumber = accountNumber.replace(/-/g, '');
+            const paymentUrl = `https://wedge3.hcauditor.org/view/re/${cleanAccountNumber}/${propertySummary.taxYear}/payment_details`;
+            
+            // 3. Navigate to Payment Details and extract table records
+            await page.goto(paymentUrl, { waitUntil: "networkidle2", ...timeout_option });
+            const paymentDetails = await getPaymentDetails(page);
+            
+            // 4. Populate Object
+            finalOutput = populateObject(propertySummary, paymentDetails, accountNumber);
+            console.log(JSON.stringify(finalOutput, null, 2));
+        }
 
     } catch (err) {
         console.log("Error during running sequence execution pipeline: ", err);
     } finally {
-        // if (browser) await browser.close();
+        if (browser) {
+            await browser.close();
+        }
     }
 }
 
-// Execute
-run("18-01088.000");
+run("045-0002-0021-00");

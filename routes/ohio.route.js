@@ -3,9 +3,11 @@ import { search as greene_search } from "../controllers/OH/greene.controller.js"
 import { search as jackson_search } from "../controllers/OH/jackson.controller.js";
 import { search as butler_search } from "../controllers/OH/butler.controller.js";
 
-import {search as wyandot_search} from "../controllers/OH/wyandot.controller.js";
+import { search as wyandot_search } from "../controllers/OH/wyandot.controller.js";
 
-import {search as delaware_search} from "../controllers/OH/delaware.controller.js";
+import { search as delaware_search } from "../controllers/OH/delaware.controller.js";
+
+import { search as hamilton_search } from "../controllers/OH/hamilton.controller.js";
 
 const route = express.Router();
 
@@ -45,5 +47,6 @@ route.post("/hardin", wyandot_search);
 route.post("/delaware", delaware_search);
 route.post("/columbiana", delaware_search);
 
+route.post("/hamilton", hamilton_search);
 
 export default route;
