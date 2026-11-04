@@ -43,6 +43,9 @@ route.post("/butler", butler_search);
 route.post("/wyandot", wyandot_search);
 route.post("/noble", wyandot_search);
 route.post("/hardin", wyandot_search);
+route.post("/harrison", wyandot_search);
+route.post("/crawford", wyandot_search);
+
 
 route.post("/delaware", delaware_search);
 route.post("/columbiana", delaware_search);
