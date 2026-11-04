@@ -5,6 +5,8 @@ import {search as leon_search} from "../controllers/FL/leon.controller.js";
 
 import {search as dixie_search} from "../controllers/FL/dixie.controller.js";
 
+import { search as gadsden_search } from "../controllers/FL/gadsden.controller.js";
+
 
 const route = express.Router();
 
@@ -32,5 +34,6 @@ route.post("/marion", leon_search);
 
 route.post("/dixie", dixie_search);
 
+route.post("/gadsden", gadsden_search);
 
 export default route;
