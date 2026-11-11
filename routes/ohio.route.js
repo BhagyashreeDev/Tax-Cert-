@@ -9,6 +9,8 @@ import { search as delaware_search } from "../controllers/OH/delaware.controller
 
 import { search as hamilton_search } from "../controllers/OH/hamilton.controller.js";
 
+import {search as franklin_search} from "../controllers/OH/franklin.controller.js";
+
 const route = express.Router();
 
 route.post("/greene", greene_search);
@@ -39,6 +41,8 @@ route.post("/miami", jackson_search);
 route.post("/paulding", jackson_search);
 
 route.post("/butler", butler_search);
+
+route.post("/franklin", franklin_search);
 
 route.post("/wyandot", wyandot_search);
 route.post("/noble", wyandot_search);
