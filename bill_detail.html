@@ -1,0 +1,1023 @@
+<!DOCTYPE html><html lang="en" xml:lang="en"><head style="">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="format-detection" content="telephone=no">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>
+                        TaxSys - San Bernardino County Auditor-Controller/Treasurer/Tax Collector    </title>
+
+    <script language="javascript">
+    var app_user_role = 'public';
+    var county_id = 'ca_sanbernardino';
+    var global_user_id = '1f38cb84-5a03-11e8-ac1d-005056815ff0';
+    var global_user_name = 'Public_User';
+</script>
+    <script language="javascript">
+        var psc_client = 'ca-sanbernardino';
+        var psc_site   = 'taxsys-landing';
+        var psc_tags   = [  ];
+        var environment = 'prod';
+    </script>
+<script async="" src="https://pay-hub.net/web/widgets/current/taxsys-iframe-public.js"></script><script async="" src="https://pay-hub.net/web/widgets/current/cloud-translations.js"></script>
+                <style>
+                    @import url('https://pay-hub.net/web/widgets/current/taxsys-iframe-public.css') layer(taxsys-legacy);
+                </style>
+            
+                <style>
+                    @import url('/iframe-taxsys/sanbernardino-ca.county-taxes.com/tcb/~22174f5fa35d247e6101bd820f7740bee6f41303/css?govhub:loading-bars') layer(taxsys-legacy);
+                </style>
+            
+    <script type="text/javascript"> window.static_url_prefix = ''; </script>
+    <script src="/iframe-taxsys/sanbernardino-ca.county-taxes.com/tcb/~22174f5fa35d247e6101bd820f7740bee6f41303/javascript?lib/jquery:lib/jquery-placeheld:lib/popper-1.15.0.min:lib/bootstrap-4.3.1.min:lib/jquery.stickybits-3.7.7.min:lib/js.cookie.min:ajax:iframe-whisperer:base:ccutils:dlutils:environment-banner:filtered-search:loading-buttons:main:print-bill-wait:property_tax:timer_cookie:public:public/alert-boxes:loading_bars:public/messages:lib/sentry/bundle.tracing.min:jserror_sentry"></script>    <script src="/iframe-taxsys/sanbernardino-ca.county-taxes.com/tcb/~22174f5fa35d247e6101bd820f7740bee6f41303/javascript?cart/gsgx_property_tax_buttons:print-or-request-bill:refund-request-form"></script>
+    <script type="text/javascript" language="javascript">
+                $(function() { set_page_load_cookie(0,'888890D6-E3CE-11F1-BCF2-E45C6BE7EEB4'); });
+    </script>
+    <script type="text/javascript" language="javascript">
+    window.cc_check_ignore_fields = new Array("search_query", "search_account_number", "search_county_account_number", "account_number");
+</script>    <script type="text/javascript" language="javascript">
+    window.cc_check_warn_fields = new Array();
+</script>                    
+    
+            <script language="javascript">
+            var sentry_params = {};
+            $.extend(true, sentry_params,
+                { integrations: [Sentry.browserTracingIntegration()]},
+                {"tracesSampleRate":0.01,"release":"tax-cbs@22174f5fa35d247e6101bd820f7740bee6f41303","dsn":"https://5efe114e037640859e5b43c59e5dc5d1@o168195.ingest.sentry.io/5729937","autoSessionTracking":true,"initialScope":{"user":{"sso_class":null,"session_id":"261892199007608973365766587418727560087","first_name":"Public","oidc_subject":null,"last_name":"User","email":null,"username":"public_user","id":"3","role":"public"},"tags":{"request_id":"888890D6-E3CE-11F1-BCF2-E45C6BE7EEB4","county":"sanbernardino-ca","app_site":"sanbernardino-ca.county-taxes.com"}},"sampleRate":1,"environment":"prod","attachStacktrace":true},
+                { initialScope: { tags: { url: window.location.pathname } } }
+            );
+            Sentry.init(sentry_params);
+        </script>
+    
+        </head>
+<body class="public-v2 public-govhub gsgx_property_tax js" data-correlation-id="tax-cbs:8888948C-E3CE-11F1-B6E5-DC11947C155F">
+    <div class="modals">
+    <div class="modal" id="session-validation" tabindex="-1" role="dialog" data-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Validating your session</h5>
+                </div>
+                <div class="modal-body row justify-content-center">
+                    <div class="col-12">
+                        <span class="loading-bars" role="status">
+    <span></span>
+    <span></span>
+    <span></span>
+    <span></span>
+    <span class="sr-only">Loading</span>
+</span>                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Print or Request Bill modal window -->
+    <div class="modal" id="print-or-request-bill-modal" tabindex="-1" role="dialog" data-backdrop="static">
+        <div class="modal-dialog" role="document">
+            <div id="print-or-request-bill-modal-content" class="modal-content" tabindex="-1">
+                <div class="modal-header">
+                    <h5 id="print-or-request-bill-title">Print or Request Bill</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span class="d-inline-flex align-items-center justify-content-center x icon" aria-hidden="true">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="1495.793 1071.793 20.414 20.414"><defs><style>.a{fill:none;stroke:#666;stroke-linecap:round;stroke-linejoin:round;}</style></defs><g transform="translate(1506 1082)"><g transform="translate(-9.5 -9.5)"><line class="a" x2="19" y2="19"></line><line class="a" y1="19" x2="19"></line></g></g></svg></span>                    </button>
+                </div>
+                <div id="print-or-request-bill-options" class="modal-body">
+                    <div id="print-without-names-option" class="custom-control custom-radio mb-2">
+                        <input class="custom-control-input" type="radio" name="billOption" id="printWithoutNames" value="print_without_names">
+                        <label class="custom-control-label" for="printWithoutNames">Print bill without owner names</label>
+                    </div>
+                                        <div class="custom-control custom-radio mb-2">
+                        <input class="custom-control-input" type="radio" name="billOption" id="requestMailed" value="request_mailed">
+                        <label class="custom-control-label" for="requestMailed">Request mailed bill with owner names</label>
+                    </div>
+
+                    <div id="print-without-names-text">
+                        For your security, this bill will print without the owner names. If you'd
+                        like to have the owner names included on the printed bill, verify
+                        ownership of this account or request a mailed bill.
+                    </div>
+                    <div id="verify-ownership-text">
+                        In order to print a bill with owner names, you must verify that you are
+                        the owner of the account.
+                    </div>
+                    <div id="request-mailed-text">
+                        You'll receive a copy of your bill by mail at the last known address for 
+                        the assessee of record.
+                    </div>
+                </div>
+
+                
+                <div id="pin-verified-text" class="modal-body">
+                    You have successfully verified ownership of
+                                            <strong>1506 N GARDENA AVE RIALTO</strong>.
+                                    </div>                    
+                <div id="print-or-request-bill-footer" class="modal-footer">
+                    <button type="button" class="btn btn-outline-primary" id="print-or-request-bill-cancel-button" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="print-or-request-bill-choose-button" disabled="">Choose an option</button>
+                    <button type="button" class="btn btn-primary" id="print-bill-button">Print Bill</button>
+                    <button type="button" class="btn btn-primary" id="verify-ownership-button">Verify Ownership</button>
+
+                    <button class="btn btn-primary loading-button" id="request-mailed-button" type="submit">
+    <span class="loading-button-indicator">
+        <span class="loading-bars" role="status">
+    <span></span>
+    <span></span>
+    <span></span>
+    <span></span>
+    <span class="sr-only">Loading</span>
+</span>    </span>
+    <span class="loading-button-content">Request Mailed Bill</span></button>
+                    <div id="login-required-warning" class="alert alert-warning m-0" role="alert">
+                        To print a bill with owner names, you must log in and provide the PIN from
+                        your original bill. Click the 
+                        <span class="d-inline-flex align-items-center justify-content-center login-icon-guest icon icon-inline" aria-hidden="true">
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M11.2857 6.51837C11.2859 6.85474 11.2119 7.18702 11.0689 7.49148C10.9259 7.79595 10.7175 8.0651 10.4585 8.27974C10.1995 8.49438 9.89637 8.64921 9.57065 8.73319C9.24493 8.81717 8.9047 8.82822 8.57421 8.76556C8.04898 8.62973 7.58272 8.32552 7.24681 7.8995C6.91091 7.47349 6.72386 6.94913 6.71429 6.4067V5.71576C6.72386 5.17333 6.91091 4.64897 7.24681 4.22296C7.58272 3.79694 8.04898 3.49274 8.57421 3.3569C8.9047 3.29424 9.24493 3.3053 9.57065 3.38927C9.89637 3.47325 10.1995 3.62808 10.4585 3.84272C10.7175 4.05736 10.9259 4.32651 11.0689 4.63098C11.2119 4.93545 11.2859 5.26772 11.2857 5.60409V6.51837Z" stroke="#0077B3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+<path d="M9.00001 16.5102C13.1478 16.5102 16.5102 13.1477 16.5102 8.99995C16.5102 4.85218 13.1478 1.48975 9.00001 1.48975C4.85224 1.48975 1.48981 4.85218 1.48981 8.99995C1.48981 13.1477 4.85224 16.5102 9.00001 16.5102Z" stroke="#0077B3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+<path d="M3.88 14.4922C4.33411 13.5216 5.05882 12.7026 5.96706 12.1338C6.8753 11.565 7.92846 11.2705 9 11.2857C10.0716 11.2705 11.1247 11.565 12.033 12.1338C12.9412 12.7026 13.6659 13.5216 14.12 14.4922" stroke="#0077B3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg></span>                        icon in the top right corner of your screen.
+                    </div>
+                </div>
+                <div id="print-or-request-bill-loading" class="modal-body mb-2">
+                    <span class="loading-bars" role="status">
+    <span></span>
+    <span></span>
+    <span></span>
+    <span></span>
+    <span class="sr-only">Loading</span>
+</span>                </div>
+                <div id="print-or-request-bill-complete" class="modal-body mb-2" tabindex="-1">
+                    <div id="print-bill-success-text">
+                        A bill <span id="print-bill-with-without">without</span> owner names for
+                                                    <strong>1506 N GARDENA AVE RIALTO</strong>
+                                                will download in a few moments. Please do not close the browser window until 
+                        it completes.
+                    </div>
+                    <div id="request-mailed-success-text">
+                        You have successfully requested a bill for 
+                                                    <strong>1506 N GARDENA AVE RIALTO</strong>.
+                                                Please allow time for the request to be processed and mailed to 
+                        the last known address of the assessee of record.
+                    </div>
+                    <div id="request-pin-success-text">
+                        <p>You have successfully requested a bill for 
+                                                    <strong>1506 N GARDENA AVE RIALTO</strong>.
+                        </p>
+                        <p>PINs are included with all bills. After you receive the PIN, it must be
+                        submitted via the Account Summary page or My Items page.</p>
+                        <p>Please allow time for the request to be processed and mailed to 
+                        the last known address of the assessee of record.</p>
+                    </div>
+                    <div id="request-mailed-error-text">
+                        An error occurred while processing your request. Please try again later.
+                    </div>
+                    <div class="mt-3"><a href="#" data-dismiss="modal">Hide Message</a></div>
+                </div>
+            </div>
+        </div>
+    </div></div>
+
+<div class="container-fluid">
+    <div class="row banners">
+        <div class="col-12">
+            <div class="row" id="message_container" aria-live="assertive"></div>
+        </div>
+    </div>
+
+    
+    <input type="hidden" id="govhub-redirect-path" name="govhub-redirect-path" value="/iframe-taxsys/sanbernardino-ca.county-taxes.com">
+
+    <main class="page-content">
+            <section class="content-card account gsgx-property-tax details">
+        <div class="d-flex justify-content-between align-items-center">
+        <div class="row no-gutters align-items-center">
+            <div class="col-auto"><a href="https://sbcountyatc.gov/tax-services/property-tax" onclick="return iframe_navigate('/property-tax', 'navigation')">    <div class="row no-gutters flex-nowrap align-items-center icon-link pagination-back">                    <div class="col link-text">
+                Search            </div>
+            <div class="col wait-link-text d-none">
+                <em class="text-muted">Downloading...</em>
+            </div>
+            </div>
+</a></div><div class="col-auto"><span class="d-inline-flex align-items-center justify-content-center pagination-next icon" aria-hidden="true">
+    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="9.306" height="16" viewBox="0 0 9.306 16">
+  <defs>
+    <clipPath id="clip-path">
+      <rect width="16" height="9.306" fill="none"></rect>
+    </clipPath>
+  </defs>
+  <g id="caret" transform="translate(9.306) rotate(90)" clip-path="url(#clip-path)">
+    <g id="Artwork_10" data-name="Artwork 10" transform="translate(12.5 2.305) rotate(-90)">
+      <path id="Artwork_10-2" data-name="Artwork 10" d="M0,14,7.306,7,0,0" transform="translate(-6.001 -11.5)" fill="none" stroke="#0077b3" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+    </g>
+  </g>
+</svg></span></div><div class="col-auto"><a href="https://sbcountyatc.gov/tax-services/property-tax/c2FuYmVybmFyZGluby1jYTpnc2d4X3Byb3BlcnR5X3RheDpwYXJlbnRzOmMxMTM5YThjLTU5YzctMTFmMC1hMmJmLWUxNTJhMDUxZGQwZA==" onclick="return iframe_navigate('/property-tax/c2FuYmVybmFyZGluby1jYTpnc2d4X3Byb3BlcnR5X3RheDpwYXJlbnRzOmMxMTM5YThjLTU5YzctMTFmMC1hMmJmLWUxNTJhMDUxZGQwZA==', '')">    <div class="row no-gutters flex-nowrap align-items-center icon-link ">                    <div class="col link-text">
+                Account Summary            </div>
+            <div class="col wait-link-text d-none">
+                <em class="text-muted">Downloading...</em>
+            </div>
+            </div>
+</a></div><div class="col-auto"><span class="d-inline-flex align-items-center justify-content-center pagination-next icon" aria-hidden="true">
+    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="9.306" height="16" viewBox="0 0 9.306 16">
+  <defs>
+    <clipPath id="clip-path">
+      <rect width="16" height="9.306" fill="none"></rect>
+    </clipPath>
+  </defs>
+  <g id="caret" transform="translate(9.306) rotate(90)" clip-path="url(#clip-path)">
+    <g id="Artwork_10" data-name="Artwork 10" transform="translate(12.5 2.305) rotate(-90)">
+      <path id="Artwork_10-2" data-name="Artwork 10" d="M0,14,7.306,7,0,0" transform="translate(-6.001 -11.5)" fill="none" stroke="#0077b3" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+    </g>
+  </g>
+</svg></span></div><div class="col-auto">Bill Details</div>
+        </div>
+            </div>
+    <div class="account-header">
+        <div class="row no-gutters">
+            <h1 class="col col-md">    Account <span translate="no">0127152010000 — 1506 N GARDENA AVE</span>
+</h1>
+                    </div>
+
+        
+        <div class="row">
+            <input type="hidden" id="should-update-session" value="1">
+            <div class="col-12 col-md-auto account-detail">
+            <div>
+                Address:
+            </div>
+            <div class="value identifying-information" translate="no">
+                                    1506 N GARDENA AVE                                    RIALTO                            </div>
+        </div>
+        <div class="col-12 col-md account-details">
+        <div class="container-fluid p-0">
+            <div class="row">
+                                    <div class="col-12 col-md-auto account-detail">
+                        <div class="parcel">
+                            <a href="https://sbcountyatc.gov/tax-services/property-tax/c2FuYmVybmFyZGluby1jYTpnc2d4X3Byb3BlcnR5X3RheDpwYXJlbnRzOmMxMTM5YThjLTU5YzctMTFmMC1hMmJmLWUxNTJhMDUxZGQwZA==/bills/16d62d56-eb29-11f0-9aaa-005056a472ea#parcel" onclick="return iframe_navigate('/property-tax/c2FuYmVybmFyZGluby1jYTpnc2d4X3Byb3BlcnR5X3RheDpwYXJlbnRzOmMxMTM5YThjLTU5YzctMTFmMC1hMmJmLWUxNTJhMDUxZGQwZA==/bills/16d62d56-eb29-11f0-9aaa-005056a472ea#parcel', '')">    <div class="row no-gutters flex-nowrap align-items-center icon-link info">                    <div class="col link-text">
+                Parcel details            </div>
+            <div class="col wait-link-text d-none">
+                <em class="text-muted">Downloading...</em>
+            </div>
+            </div>
+</a>                        </div>
+                    </div>
+                            </div>
+            <div class="row">
+                            </div>
+            <div class="row">
+                            </div>
+            <div class="row">
+                                <div class="col-12 col-md-auto account-detail">
+                        <div class="parcel">
+                            <a data-toggle="collapse" href="#gsg-refund-request-form" aria-expanded="false" aria-controls="gsg-refund-request-form">
+                                Request refund form
+                            </a>
+                        </div>
+                    </div>
+                        </div>
+            <div class="row">
+                <div class="col-12 col-md-auto account-detail">                </div>
+            </div>
+                            <div class="row">
+                    <div class="col-12 col-md-auto account-detail">
+                    <a href="https://assr.parcelquest.com/DA/SBDASSR/0127152010000" target="_blank">    <div class="row no-gutters flex-nowrap align-items-center icon-link external-link">            <div class="col-auto d-flex align-items-center">
+                <span class="d-inline-flex align-items-center justify-content-center external-link icon" aria-hidden="true">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="1894 1019.793 24.207 24.207"><defs><style>.a{fill:none;stroke:#666;stroke-linecap:round;stroke-linejoin:round;}</style></defs><g transform="translate(1906 1032)"><g transform="translate(-11.5 -11.5)"><path class="a" d="M21.5,13v8.674A1.826,1.826,0,0,1,19.674,23.5H2.326A1.826,1.826,0,0,1,.5,21.674V4.326A1.826,1.826,0,0,1,2.326,2.5H11" transform="translate(-0.5 -0.5)"></path><line class="a" x2="6" transform="translate(17)"></line><line class="a" y1="6" transform="translate(23)"></line><line class="a" y1="11" x2="11" transform="translate(12)"></line></g></g></svg></span>            </div>                    <div class="col link-text">
+                                        Assessment Information                                </div>
+            <div class="col wait-link-text d-none">
+                <em class="text-muted">Downloading...</em>
+            </div>
+            </div>
+</a>                    </div>
+                </div>
+                                </div>
+    </div>                                        <div>
+                    <div id="account-summary-actions" class="requires-login">
+            <span class="loading-bars" role="status">
+    <span style="visibility: visible;"></span>
+    <span style="visibility: visible;"></span>
+    <span style="visibility: visible;"></span>
+    <span style="visibility: visible;"></span>
+    <span class="sr-only" style="visibility: visible;">Loading</span>
+</span>            <script> 
+                show_loading_bars('#account-summary-actions');
+                // Save the link so it can be called after pin verification 
+                window.updateActionsLink = '16d62d56-eb29-11f0-9aaa-005056a472ea/update-actions';
+            </script>
+            <input class="requires-login" type="hidden" onsubmit="
+                GSGajax.update_elements('16d62d56-eb29-11f0-9aaa-005056a472ea/update-actions');
+            ">
+        </div>                </div>
+                    </div>
+                    <script src="https://static.govhub.com/forms-public/forms-public.umd.cjs" type="text/javascript" charset="utf-8">
+</script>
+
+    <div id="gsg-refund-request-form" class="row no-gutters collapse" style="margin-top: 1 rem;" tabindex="-1" data-focus-on-show="">
+            <div id="refund-request-form" class="col col-mid" style="background-color: #F8F8F8; border-radius: 0.625rem; padding: 1rem 2rem; border: 1px solid transparent;">
+            <h4 class="mb-3">
+                Request refund form
+            </h4>
+                            There are no available refunds for this account.
+                    </div>
+        </div>        
+    </div>
+    
+    
+            <div class="content-group individual-bill">
+
+            <div class="row">
+                <h2 class="col-12 col-md-auto">
+                    <span translate="no">2026</span>‍ Secured Annual Bill <span translate="no">#20260943385</span>                                    </h2>
+
+                            </div>
+
+            <div class="bills" id="amount-due-content">
+                <div class="row bill " data-bill-number="20260943385">
+        <div class="col-12 col-md-6 match">
+            <div class="bill-details">
+                    <div class="identifying-information">
+                        Assessee: <span translate="no">Current Owner</span>
+                    </div>
+                </div>
+            
+        
+                                <div class="bill-print">
+                                <a href="https://county-taxes.net/iframe-taxsys/sanbernardino-ca.county-taxes.com/govhub/property-tax/c2FuYmVybmFyZGluby1jYTpnc2d4X3Byb3BlcnR5X3RheDpwYXJlbnRzOmMxMTM5YThjLTU5YzctMTFmMC1hMmJmLWUxNTJhMDUxZGQwZA==/bills/16d62d56-eb29-11f0-9aaa-005056a472ea/print" class="js-ga-track-download print-link-with-icon" print_wait_time="15">    <div class="row no-gutters flex-nowrap align-items-center icon-link print">            <div class="col-auto d-flex align-items-center">
+                <span class="d-inline-flex align-items-center justify-content-center print icon" aria-hidden="true">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="1944 1220 24.001 24">
+  <defs>
+    <style>
+      .cls-1, .cls-2 {
+        fill: none;
+        stroke: #666;
+      }
+
+      .cls-1 {
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .cls-2 {
+        stroke-miterlimit: 10;
+      }
+    </style>
+  </defs>
+  <g id="print" transform="translate(1956 1232)">
+    <g id="fax" transform="translate(-11.5 -11.5)">
+      <path id="Path_1112" data-name="Path 1112" class="cls-1" d="M18.5,17.5h4.005a1.024,1.024,0,0,0,.995-1.04V9.1A2,2,0,0,0,23.165,8l-1.66-2.5H2.5L.836,8A2,2,0,0,0,.5,9.106V16.46a1.024,1.024,0,0,0,.995,1.04H5.5" transform="translate(-0.5 -0.5)"></path>
+      <rect id="Rectangle_653" data-name="Rectangle 653" class="cls-1" width="13" height="5" transform="translate(5)"></rect>
+      <rect id="Rectangle_654" data-name="Rectangle 654" class="cls-1" width="13" height="9" transform="translate(5 14)"></rect>
+      <line id="Line_1166" data-name="Line 1166" class="cls-1" x2="7" transform="translate(8 17)"></line>
+      <line id="Line_1167" data-name="Line 1167" class="cls-1" x2="5" transform="translate(8 20)"></line>
+      <circle id="Ellipse_376" data-name="Ellipse 376" class="cls-2" cx="0.5" cy="0.5" r="0.5" transform="translate(15.5 8.5)"></circle>
+      <circle id="Ellipse_377" data-name="Ellipse 377" class="cls-2" cx="0.5" cy="0.5" r="0.5" transform="translate(19.5 8.5)"></circle>
+      <line id="Line_1168" data-name="Line 1168" class="cls-1" x2="17" transform="translate(3 14)"></line>
+    </g>
+  </g>
+</svg></span>            </div>                    <div class="col link-text">
+                Print bill (PDF)            </div>
+            <div class="col wait-link-text d-none">
+                <em class="text-muted">Downloading...</em>
+            </div>
+            </div>
+</a>            </div>        </div>
+        <div class="col-12 col-md-6">
+                                                                                
+                                                                        <div class="row installment">
+                        <div class="col-12 col-md-6 details">
+                            <div class="label">
+                    1st Installment                        </div>
+            <div class="installment-date">Delinquent After<br><span translate="no">12/10/2026</span></div>                        </div>
+
+                        <div class="col-12 col-md-6 align-items-center pay-bill-button-container balance">
+                            <div class="pay-data">
+        
+                                <script>
+                if (!document.installment_name_lookup) {
+                    document.installment_name_lookup = {};
+                }
+                document.installment_name_lookup['27265756'] = '2026 Secured Annual Bill #20260943385 &mdash; 1st Installment';
+            </script>
+                            <div class="row">
+                    <div class="col-12 amount-due">
+                        Amount due: <span class="amount" translate="no">$3,478.10</span>
+                    </div>
+                </div>
+            
+                                                </div>                        </div>
+                    </div>
+                                                        <div class="row installment">
+                        <div class="col-12 col-md-6 details">
+                            <div class="label">
+                    2nd Installment                        </div>
+            <div class="installment-date">Delinquent After<br><span translate="no">04/12/2027</span></div>                        </div>
+
+                        <div class="col-12 col-md-6 align-items-center pay-bill-button-container balance">
+                            <div class="pay-data">
+        
+                                <script>
+                if (!document.installment_name_lookup) {
+                    document.installment_name_lookup = {};
+                }
+                document.installment_name_lookup['28173385'] = '2026 Secured Annual Bill #20260943385 &mdash; 2nd Installment';
+            </script>
+                            <div class="row">
+                    <div class="col-12 amount-due">
+                        Amount due: <span class="amount" translate="no">$3,478.10</span>
+                    </div>
+                </div>
+            
+                                                </div>                        </div>
+                    </div>
+                                                        <div class="row installment">
+                        <div class="col-12 col-md-6 details">
+                            <div class="label">
+                    Full Amount                        </div>                        </div>
+
+                        <div class="col-12 col-md-6 align-items-center pay-bill-button-container balance">
+                            <div class="pay-data">
+        
+                                <script>
+                if (!document.installment_name_lookup) {
+                    document.installment_name_lookup = {};
+                }
+                document.installment_name_lookup['27265756;28173385'] = '2026 Secured Annual Bill #20260943385 &mdash; Full Amount';
+            </script>
+                            <div class="row">
+                    <div class="col-12 amount-due">
+                        Amount due: <span class="amount" translate="no">$6,956.20</span>
+                    </div>
+                </div>
+            
+                                        <div class="row">                </div>
+                                                <div class="row">
+                    <div class="col-12" name="magic-buttons">
+                                                    <div id="add-to-cart-container-16d62d56-eb29-11f0-9aaa-005056a472ea" data-environment="prod" data-payable-source-id="16d62d56-eb29-11f0-9aaa-005056a472ea" data-payable-path="/Taxsys-GovHub/v0/items/sanbernardino-ca:gsgx_property_tax:items:16d62d56-eb29-11f0-9aaa-005056a472ea?installment=first-installment">
+    </div>                                                                        </div>
+                </div>
+                <div>
+                                    </div>
+                                    </div>                        </div>
+                    </div>
+                                    </div>
+    </div>
+                
+                                    <div class="content-group component-account">
+                        <h2>Details: <span translate="no">2026</span>‍ Secured Annual Bill <span translate="no">#20260943385</span></h2>                                                    <p class="fiscal-year">Fiscal Year: 2026-27</p>
+                                                <h3>Assessed Value</h3>
+                        <div class="table-responsive">
+                            <table class="table table-sm assessed-values-table">
+                                <thead>
+                                    <tr>
+                                        <th>Land</th>
+                                        <th>Improvements</th>
+                                        <th>Personal Property</th>
+                                        <th>Exemptions</th>
+                                        <th>Net Assessed Value</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>$132,598</td>
+                                        <td>$397,794</td>
+                                        <td>$0</td>
+                                        <td>$0</td>
+                                        <td>$530,392</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                                                    
+                                                                                                                                                                                    <div class="row advalorem">
+        <h3 class="col-12">Ad Valorem Taxes</h3>
+
+                    <div class="col-12">
+                <a href="https://sbcountyatc.gov/tax-services/property-tax/c2FuYmVybmFyZGluby1jYTpnc2d4X3Byb3BlcnR5X3RheDpwYXJlbnRzOmMxMTM5YThjLTU5YzctMTFmMC1hMmJmLWUxNTJhMDUxZGQwZA==/bills/16d62d56-eb29-11f0-9aaa-005056a472ea/tax-dollar-breakdown" onclick="return iframe_navigate('/property-tax/c2FuYmVybmFyZGluby1jYTpnc2d4X3Byb3BlcnR5X3RheDpwYXJlbnRzOmMxMTM5YThjLTU5YzctMTFmMC1hMmJmLWUxNTJhMDUxZGQwZA==/bills/16d62d56-eb29-11f0-9aaa-005056a472ea/tax-dollar-breakdown', '')">Where Do These Tax Dollars Go?</a>            </div>
+        
+        <div class="col-12">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th scope="col" class="d-none d-md-table-cell name">Taxing authority</th>                        <th scope="col" class="millage">Rate</th>                            <th scope="col" class="d-none d-md-table-cell assessed">Assessed</th>                            <th scope="col" class="d-none d-md-table-cell exemption">Exemption</th>                        <th scope="col" class="d-none d-md-table-cell taxable">Taxable</th>                                                <th scope="col" class="tax">Tax</th>                    </tr>
+                </thead>
+
+                    <tbody class="taxing-authority">
+                        <tr class="d-none d-md-table-row" translate="no">
+                            <th scope="row" class="name">
+                                Countywide Tax (Secured)                            </th>                                <td class="millage">
+                                    1.00000000%                                </td>                                    <td class="assessed">
+                                        $530,392.00                                    </td>                                    <td class="exemption">
+                                        $0.00                                    </td>                                <td class="taxable">
+                                    $530,392.00                                </td>                                <td class="tax">$5,303.92                                </td>                        </tr>
+                    </tbody>
+                    <tbody class="taxing-authority">
+                        <tr class="d-none d-md-table-row" translate="no">
+                            <th scope="row" class="name">
+                                San Bernardino Community College                            </th>                                <td class="millage">
+                                    0.04566430%                                </td>                                    <td class="assessed">
+                                        $530,392.00                                    </td>                                    <td class="exemption">
+                                        $0.00                                    </td>                                <td class="taxable">
+                                    $530,392.00                                </td>                                <td class="tax">$242.19                                </td>                        </tr>
+                    </tbody>
+                    <tbody class="taxing-authority">
+                        <tr class="d-none d-md-table-row" translate="no">
+                            <th scope="row" class="name">
+                                Rialto Unified                            </th>                                <td class="millage">
+                                    0.10878034%                                </td>                                    <td class="assessed">
+                                        $530,392.00                                    </td>                                    <td class="exemption">
+                                        $0.00                                    </td>                                <td class="taxable">
+                                    $530,392.00                                </td>                                <td class="tax">$576.96                                </td>                        </tr>
+                    </tbody>
+                    <tbody class="taxing-authority">
+                        <tr class="d-none d-md-table-row" translate="no">
+                            <th scope="row" class="name">
+                                San Bernardino Valley Muni Water Dist                            </th>                                <td class="millage">
+                                    0.04000000%                                </td>                                    <td class="assessed">
+                                        $530,392.00                                    </td>                                    <td class="exemption">
+                                        $0.00                                    </td>                                <td class="taxable">
+                                    $530,392.00                                </td>                                <td class="tax">$212.15                                </td>                        </tr>
+                    </tbody>
+                <tfoot>
+                    <tr>                            <th scope="row" class="d-none d-md-table-cell name">
+                                Total Ad Valorem Taxes
+                            </th>
+                            <td class="millage" translate="no">
+                                1.19444464%                            </td>                            <td colspan="3" class="d-none d-md-table-cell">
+                            </td>                            <td class="tax" translate="no">$6,335.22                            </td>                    </tr>                </tfoot>
+            </table>
+        </div>
+    </div>
+                                                                                                                                <div class="row nonadvalorem">
+        <h3 class="col-12">Direct Charges and Special Assessments</h3>
+
+        <div class="col-12">
+            <table class="table table-hover">
+                <thead>
+                    <tr class="d-flex">
+                        <th scope="col" class="col-12 col-md d-none d-md-table-cell levying-authority">Levying authority</th>
+                        <th scope="col" class="col-2 d-none d-md-table-cell code">Code</th>                        <th scope="col" class="col-2 d-none d-md-table-cell rate">Phone Number</th>
+                        <th scope="col" class="col-2 amount">Amount</th>                    </tr>
+                </thead>
+
+                    <tbody>
+                        <tr class="d-none d-md-flex">
+                            <th scope="row" class="col levying-authority">
+                                <span translate="no">EHS-*Mosquito and Vector Control-Rialto</span>                            </th>
+                                                        <td class="col-2 code" translate="no">
+                                AE001-SP006                            </td>
+                                                        <td class="col-2 rate" translate="no">
+                                                                (800) 442-2283                            </td>
+                            <td class="col-2 amount" translate="no">$5.62                            </td>                        </tr>
+                    </tbody>
+                    <tbody>
+                        <tr class="d-none d-md-flex">
+                            <th scope="row" class="col levying-authority">
+                                <span translate="no">City of Rialto - *Landscape Maint Dist 1</span>                            </th>
+                                                        <td class="col-2 code" translate="no">
+                                CC028-SP002                            </td>
+                                                        <td class="col-2 rate" translate="no">
+                                                                (800) 439-6553                            </td>
+                            <td class="col-2 amount" translate="no">$63.80                            </td>                        </tr>
+                    </tbody>
+                    <tbody>
+                        <tr class="d-none d-md-flex">
+                            <th scope="row" class="col levying-authority">
+                                <span translate="no">City of Rialto - *Streetlight Dist 1</span>                            </th>
+                                                        <td class="col-2 code" translate="no">
+                                CC028-SP003                            </td>
+                                                        <td class="col-2 rate" translate="no">
+                                                                (800) 439-6553                            </td>
+                            <td class="col-2 amount" translate="no">$26.08                            </td>                        </tr>
+                    </tbody>
+                    <tbody>
+                        <tr class="d-none d-md-flex">
+                            <th scope="row" class="col levying-authority">
+                                <span translate="no">City of Rialto - *Annual Solid Waste</span>                            </th>
+                                                        <td class="col-2 code" translate="no">
+                                CC028-SP013                            </td>
+                                                        <td class="col-2 rate" translate="no">
+                                                                (909) 877-1596                            </td>
+                            <td class="col-2 amount" translate="no">$525.48                            </td>                        </tr>
+                    </tbody>
+                <tfoot>
+                    <tr class="d-flex">                            <th scope="row" class="col d-none d-md-flex total">
+                                Total Direct Charges and Special Assessments                            </th>
+                            <td class="col-2 d-none d-md-flex rate"></td>
+                            <td class="col-12 col-md-2 amount" translate="no">$620.98                            </td>                    </tr>                </tfoot>
+            </table>
+            <div>
+                                    </div>
+        </div>
+    </div>
+                                                                    <div class="row totals">
+        <h3 class="col-12">Totals</h3>
+
+        <div class="col-12">
+            <table class="table table-hover">
+                <thead>
+                    <tr class="d-flex">
+                        <th scope="col" class="col-12 col-md d-none d-md-table-cell name"></th>
+                        <th scope="col" class="col-2 amount">Amount</th>                    </tr>
+                </thead>
+
+                <tbody>
+                    <tr class="d-none d-md-flex">
+                        <th scope="row" class="col name">Total
+                        </th><td class="col-2 tax" translate="no">$6,956.20</td>                    </tr>
+                </tbody>
+                <tbody>
+                                                                                                        <tr class="d-none d-md-flex">
+                        <th scope="row" class="col name">Total payments made</th>
+                                                <td class="col-2 tax" translate="no">
+                            $0.00                        </td>                    </tr>
+                </tbody>
+
+                <tfoot>
+                    <tr class="d-flex">
+                        <th scope="row" class="col d-none d-md-flex total">
+                            Balance due
+                        </th>
+                        <td class="col-12 col-md-2 tax" translate="no">
+                            $6,956.20                        </td>                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>                                            </div>
+                
+                            </div>
+        </div>
+
+                                        <div class="content-group details parcel">
+                    <div class="row">
+                        <h2 class="col-12 d-flex bill-label" id="parcel">
+                                                            <span translate="no">Parcel details</span>
+                                                    </h2>
+                    </div>
+
+                    <div class="row detail">
+                        <div class="col-12 col-md-4 ">
+                    <div class="row no-gutters px-2 header">
+                <div class="col-12">
+                    General                </div>
+            </div>
+        
+                    <div class="row no-gutters px-1">
+                <div class="col label">
+                    Account Number:                </div>
+                <div class="col value" translate="no">
+                    0127152010000                </div>
+            </div>
+                    <div class="row no-gutters px-1">
+                <div class="col label">
+                    Tax Rate Area:                </div>
+                <div class="col value" translate="no">
+                    006-003                </div>
+            </div>
+                    <div class="row no-gutters px-1">
+                <div class="col label">
+                    Tax Rate:                </div>
+                <div class="col value" translate="no">
+                    1.19444464%                </div>
+            </div>
+                    <div class="row no-gutters px-1">
+                <div class="col label">
+                    Tax Rate Year:                </div>
+                <div class="col value" translate="no">
+                    2026                </div>
+            </div>
+            </div>
+    <div class="col-12 col-md-4 assessed-values">
+                    <div class="row no-gutters px-2 header">
+                <div class="col-12">
+                    Assessed Values                </div>
+            </div>
+        
+                    <div class="row no-gutters px-1">
+                <div class="col label">
+                    Land:                </div>
+                <div class="col value" translate="no">
+                    $132,598                </div>
+            </div>
+                    <div class="row no-gutters px-1">
+                <div class="col label">
+                    Improvements:                </div>
+                <div class="col value" translate="no">
+                    $397,794                </div>
+            </div>
+                    <div class="row no-gutters px-1">
+                <div class="col label">
+                    Fixtures:                </div>
+                <div class="col value" translate="no">
+                    $0                </div>
+            </div>
+                    <div class="row no-gutters px-1">
+                <div class="col label">
+                    Personal Property:                </div>
+                <div class="col value" translate="no">
+                    $0                </div>
+            </div>
+                    <div class="row no-gutters px-1">
+                <div class="col label">
+                    Aircraft:                </div>
+                <div class="col value" translate="no">
+                    $0                </div>
+            </div>
+                    <div class="row no-gutters px-1">
+                <div class="col label">
+                    Resources:                </div>
+                <div class="col value" translate="no">
+                    $0                </div>
+            </div>
+                    <div class="row no-gutters px-1">
+                <div class="col label">
+                    Other:                </div>
+                <div class="col value" translate="no">
+                    $0                </div>
+            </div>
+                    <div class="row no-gutters px-1">
+                <div class="col label">
+                    homeowners exemption:                </div>
+                <div class="col value" translate="no">
+                    $0                </div>
+            </div>
+                    <div class="row no-gutters px-1">
+                <div class="col label">
+                    other exemption:                </div>
+                <div class="col value" translate="no">
+                    $0                </div>
+            </div>
+                    <div class="row no-gutters px-1">
+                <div class="col label">
+                    total taxable value:                </div>
+                <div class="col value" translate="no">
+                    $530,392                </div>
+            </div>
+            </div>
+    <div class="col-12 col-md-4 assessed-values">
+                    <div class="row no-gutters px-2 header">
+                <div class="col-12">
+                    Change in Assessed Values                </div>
+            </div>
+        
+                    <div class="row no-gutters px-1">
+                <div class="col label">
+                    Land:                </div>
+                <div class="col value" translate="no">
+                    $0                </div>
+            </div>
+                    <div class="row no-gutters px-1">
+                <div class="col label">
+                    Improvements:                </div>
+                <div class="col value" translate="no">
+                    $0                </div>
+            </div>
+                    <div class="row no-gutters px-1">
+                <div class="col label">
+                    Fixtures:                </div>
+                <div class="col value" translate="no">
+                    $0                </div>
+            </div>
+                    <div class="row no-gutters px-1">
+                <div class="col label">
+                    Personal Property:                </div>
+                <div class="col value" translate="no">
+                    $0                </div>
+            </div>
+                    <div class="row no-gutters px-1">
+                <div class="col label">
+                    Aircraft:                </div>
+                <div class="col value" translate="no">
+                    $0                </div>
+            </div>
+                    <div class="row no-gutters px-1">
+                <div class="col label">
+                    Resources:                </div>
+                <div class="col value" translate="no">
+                    $0                </div>
+            </div>
+                    <div class="row no-gutters px-1">
+                <div class="col label">
+                    Other:                </div>
+                <div class="col value" translate="no">
+                    $0                </div>
+            </div>
+                    <div class="row no-gutters px-1">
+                <div class="col label">
+                    homeowners exemption:                </div>
+                <div class="col value" translate="no">
+                    $0                </div>
+            </div>
+                    <div class="row no-gutters px-1">
+                <div class="col label">
+                    other exemption:                </div>
+                <div class="col value" translate="no">
+                    $0                </div>
+            </div>
+                    <div class="row no-gutters px-1">
+                <div class="col label">
+                    total taxable value:                </div>
+                <div class="col value" translate="no">
+                                    </div>
+            </div>
+            </div>
+
+                        <div class="col-12 col-md-4 ">
+                    <div class="row no-gutters px-2 header">
+                <div class="col-12">
+                    Bill Information                </div>
+            </div>
+        
+                    <div class="row no-gutters px-1">
+                <div class="col label">
+                    Bill #:                </div>
+                <div class="col value" translate="no">
+                    20260943385                </div>
+            </div>
+                    <div class="row no-gutters px-1">
+                <div class="col label">
+                    Assessment Year:                </div>
+                <div class="col value" translate="no">
+                    2026                </div>
+            </div>
+                    <div class="row no-gutters px-1">
+                <div class="col label">
+                    Effective Date:                </div>
+                <div class="col value" translate="no">
+                    JANUARY 01, 2026                </div>
+            </div>
+                    <div class="row no-gutters px-1">
+                <div class="col label">
+                    Escrow Company:                </div>
+                <div class="col value" translate="no">
+                    CHASE                </div>
+            </div>
+                    <div class="row no-gutters px-1">
+                <div class="col label">
+                    Stub 1 Due &amp; Payable:                </div>
+                <div class="col value" translate="no">
+                    11/01/2026                </div>
+            </div>
+                    <div class="row no-gutters px-1">
+                <div class="col label">
+                    Stub 2 Due &amp; Payable:                </div>
+                <div class="col value" translate="no">
+                    02/01/2027                </div>
+            </div>
+                    <div class="row no-gutters px-1">
+                <div class="col label">
+                    Both Stub Payment Deadline:                </div>
+                <div class="col value" translate="no">
+                    12/10/2026                </div>
+            </div>
+                    <div class="row no-gutters px-1">
+                <div class="col label">
+                    Tax Bill Issued/Mailed Date:                </div>
+                <div class="col value" translate="no">
+                    10/31/2026                </div>
+            </div>
+                    <div class="row no-gutters px-1">
+                <div class="col label">
+                    Total Tax:                </div>
+                <div class="col value" translate="no">
+                    $6,956.20                </div>
+            </div>
+            </div>
+                        <div class="col-12 col-md-4 ">
+                    <div class="row no-gutters px-2 header">
+                <div class="col-12">
+                    Delinquency Info                </div>
+            </div>
+        
+                    <div class="row no-gutters px-1">
+                <div class="col label">
+                    Installment 1 After 12/10/2026:                </div>
+                <div class="col value" translate="no">
+                    $3,825.91                </div>
+            </div>
+                    <div class="row no-gutters px-1">
+                <div class="col label">
+                    Installment 2 After 04/12/2027:                </div>
+                <div class="col value" translate="no">
+                    $3,835.91                </div>
+            </div>
+            </div>
+<div class="col-12 col-md-4 legal">
+        <div class="row no-gutters px-2 header">
+            <div class="col-12">
+                Legal description
+            </div>
+        </div>
+
+        <div class="row no-gutters px-1">
+            <div id="truncated-legal-description" class="col-12" translate="no">
+                TRACT 9931 LOT 1 AND INT IN COMMON AREA            </div>
+            <div class="col-12 text-right smaller">            </div>
+        </div>
+    </div>                    </div>
+                </div>            <div class="content-group notices">
+                <h2>Notices</h2>
+                <div class="bill-notice">
+                    <h1>Tax Collector</h1>
+<p>Ensen Mason CPA, CFA</p>
+<p>Auditor-Controller/Treasurer/Tax Collected</p>
+<h1>Payment Instructions</h1>
+<p>Skip the Line, Pay Online</p>
+<p><a href="http://www.sbcountyatc.gov">www.SBCountyATC.gov</a></p>
+<h1><strong>&nbsp;</strong></h1>
+<p>Detach and mail 1st and/or 2nd stub with 1st and/or 2nd installment in envelope provided. Write your parcel on your check.&nbsp;</p>
+<h1><strong>&nbsp;</strong></h1>
+<p>Make check payable to:</p>
+<p>SBC Tax Collector&nbsp;</p>
+<p>268 West Hospitality Lane, First Floor</p>
+<p>San Bernardino, CA 92415-0360</p>
+<h1><strong>&nbsp;</strong></h1>
+<p>You can pay online via e-check or credit card at <a href="http://sbcountyatc.gov">SBCountyATC.gov</a></p>
+<p>Accepted: American Express, Discover, Mastercard, Visa, Electronic Checks</p>
+<p>Not Accepted: Foreign Checks</p>
+<h1><strong>&nbsp;</strong></h1>
+<p>Check Conversion: When you provide a paper check as payment, you authorize the Tax Collector either to use information from your check to make a one-time electronic fund transfer from your account or to process the payment as a check transaction. When information from your check is used to make an electronic fund transfer, funds may be withdrawn from your account as soon as the same day your payment is received, and you will not receive your check back from your financial institution.&nbsp;</p>
+<h1>Contact Information</h1>
+<p>TAX COLLECTOR&nbsp;</p>
+<p><a href="http://sbcountyatc.gov">sbcountyatc.gov</a>&nbsp;</p>
+<p>(909) 387-8308&nbsp;</p>
+<p>268 W Hospitality Lane, 1st Floor&nbsp;</p>
+<p>San Bernardino, CA 92415</p>
+<h1><strong>&nbsp;</strong></h1>
+<p>ASSESSOR&nbsp;</p>
+<p><a href="http://arc.sbcounty.gov">arc.sbcounty.gov</a>&nbsp;&nbsp;</p>
+<p>(909) 387-8307&nbsp;</p>
+<p>222 W Hospitality Lane, 4th Floor</p>
+<p>San Bernardino, CA 92415</p>
+<h1>Bill Back (Tax Collector)</h1>
+<p>HOW TAXES ARE CALCULATED: The Tax Collector’s office is responsible for collecting property tax payments. This office does not determine the amount of taxes you owe and cannot change the amount due. In accordance with Article XIII A of the California Constitution, the tax rate is 1% of the property’s full assessed cash value, plus any bond indebtedness and special assessments.</p>
+<h1><strong>&nbsp;</strong></h1>
+<p>WHEN TAXES ARE DUE: The annual secured bill contains two payment stubs: the first installment is due November 1; the second installment is due February 1. A second notice or tax bill will NOT be mailed to you. The entire tax amount may be paid when the first installment is due; the second installment amount may only be paid separately if the first installment has been paid.&nbsp;</p>
+<h1><strong>&nbsp;</strong></h1>
+<p>WAYS TO PAY:&nbsp;</p>
+<p>PAY IN PERSON: You may visit the Tax Collector at the above address and pay by check, cash, or card. Credit and debit card payments are charged a fee determined and collected by an outside agency that processes our card payments.&nbsp;</p>
+<h1><strong>&nbsp;</strong></h1>
+<p>PAY AT HOME: Payments by e-check, credit card, or debit card may be made by calling the phone number above or going to our website. Credit and debit card payments are charged a fee determined and collected by an outside agency that processes our card payments. There is no fee for using your checking or savings account to pay your bill.&nbsp;</p>
+<h1><strong>&nbsp;</strong></h1>
+<p>PAY BY MAIL: Make all remittances (check, cashier’s check, or money order) payable to SBC Tax Collector, mail them to the above address, and enclose your parcel or bill number(s). No foreign checks accepted. Do not mail currency or coins. Remittance by mail must be USPS postmarked on or before delinquent date to avoid penalty. Many types of postage do not receive a USPS cancellation mark. For information regarding acceptable postmarks, please visit the Understanding Postmarks link at <a href="http://www.sbcountyatc.gov/tax-collector/understanding-postmarks">www.sbcountyatc.gov/tax-collector/understanding-postmarks</a>.</p>
+<h1><strong>&nbsp;</strong></h1>
+<p>ONLINE BANKING: Online payments requested through your banking institution must include your parcel number(s) and be received by the Tax Collector’s office on or before the delinquent date to avoid penalties. Your banking transaction may not be processed the same day you submit the request, and may not be USPS postmarked, which could result in delinquency. Please contact your bank regarding their procedures to ensure timely payment of taxes.&nbsp;</p>
+<h1><strong>&nbsp;</strong></h1>
+<p>PAYING $50,000 OR MORE: In accordance with California Revenue and Taxation Code (R&amp;T) §2503.2(b), the Tax Collector requires taxpayers who make an aggregate payment of fifty thousand dollars ($50,000) or more per year to submit their payments electronically. To make an ACH creditor wire transfer, please call the phone number above or email <a href="mailto:TCAccounting@sbcountyatc.gov">TCAccounting@sbcountyatc.gov</a> to get the County’s bank account information. Alternately, you may pay on our website using e-check or credit card.&nbsp;</p>
+<h1><strong>&nbsp;</strong></h1>
+<p>PROPERTY TAX POSTPONEMENT FOR SENIOR CITIZENS, BLIND OR DISABLED PERSONS: The State Controller’s Office (SCO) administers the Property Tax Postponement (PTP) program, which allows eligible homeowners to postpone payment on current-year property taxes on their primary residence. PTP applications are accepted from October 1 to February 10 each year. Go to the SCO website at <a href="http://www.ptp.sco.ca.gov/">www.ptp.sco.ca.gov</a> for more information. If you have any questions, call (800) 952-5661 or email <a href="mailto:postponement@sco.ca.gov">postponement@sco.ca.gov</a>.&nbsp;</p>
+<h1><strong>&nbsp;</strong></h1>
+<p>ELECTRONIC TAX BILLS: If you want to receive your property tax bills through email, you may enroll by going to <a href="http://www.sbcountyatc.gov/tax-services/property-tax">www.sbcountyatc.gov/tax-services/property-tax</a> and looking up your parcel. Complete the simple enrollment process and we will send the authorization link to the email address provided. You must submit the authorization to activate your enrollment.</p>
+<h1><strong>&nbsp;</strong></h1>
+<p>ESPAÑOL: Para información de su factura de impuestos de propiedad en español, por favor visite <a href="https://spanish.sbcountyatc.gov">https://spanish.sbcountyatc.gov</a> o llame al (909) 387-8308.</p>
+<h1><strong>&nbsp;</strong></h1>
+<p>AVOID PENALTIES: If taxes are not fully paid by the delinquent dates shown on the tax bill, delinquency penalties and costs are applied by law. If December 10 or April 10 falls on Saturday, Sunday, or a legal holiday, payments made by 5 p.m. or the close of business, whichever is later, on the next business day are not considered delinquent (R&amp;T §2619).</p>
+<h1><strong>&nbsp;</strong></h1>
+<p>If taxes are not fully paid by June 30, the parcel becomes tax-defaulted, and redemption penalties and fees are applied by law. If a notice stating “PRIOR YEAR TAXES UNPAID” appears on the front of this bill, the parcel is already tax-defaulted, and those defaulted taxes ARE NOT INCLUDED IN THIS BILL. You may be eligible for a payment plan; call the number above or visit our website for details.&nbsp;</p>
+<h1><strong>&nbsp;</strong></h1>
+<p>If defaulted taxes are not paid or enrolled in a payment plan within five years of the date of default, the parcel is subject to the Tax Collector’s power to sell and may be auctioned (R&amp;T §3691). If a notice stating “PROPERTY AT RISK OF TAX SALE” appears on the front of this bill, the parcel is already at risk of being sold. To redeem the parcel, all defaulted taxes, penalties, and fees must be paid with certified funds (cash, cashier’s check, money order, or wire transfer) by the last business day before the auction begins. Before making the payment, please check our website, visit our office, or call the number above to confirm the updated amount due.</p>
+<h1><strong>&nbsp;</strong></h1>
+<p>RETURNED PAYMENTS: A fee is charged for all checks or e-checks returned by the bank for any reason. The record of payment is canceled, and appropriate penalties are applied. Fees are subject to change each July 1st.&nbsp;</p>
+<h1><strong>&nbsp;</strong></h1>
+<p>RETURNED PAYMENTS: When a check or e-check is returned by the bank for any reason, a returned item fee is added to the amount due. The record of payment is canceled, and appropriate penalties are applied.&nbsp;</p>
+<h1><strong>&nbsp;</strong></h1>
+<p>MOBILE HOMES: If a mobile home property tax bill is not paid by June 30, it defaults and is transferred to the Unsecured Tax Roll. A collection fee and redemption penalties are added to the amount due.&nbsp;</p>
+<h1><strong>&nbsp;</strong></h1>
+<p>MEMO COPIES: If the front of this bill states “Memo Copy”, then the tax bill has been sent to your mortgage company or other authorized agent for payment. This copy has been provided for your reference, as per R&amp;T §2610.6. You are only required to pay taxes if your mortgage company or other authorized agent fails to do so.&nbsp;</p>
+<h1><strong>&nbsp;</strong></h1>
+<p>SUPPLEMENTAL TAX BILLS: Supplemental taxes are determined pursuant to Article XIII A of the California Constitution, which generally requires reappraisal of property due to a change in ownership or new construction. These one-time taxes are pro-rated from the first day of the month following the date of change in ownership, or date of construction completion, to the end of the fiscal year. SUPPLEMENTAL TAX BILLS ARE NOT SENT TO YOUR MORTGAGE COMPANY.&nbsp;</p>
+<h1><strong>&nbsp;</strong></h1>
+<p>ESCAPED ASSESSMENT INSTALLMENT PAYMENTS: If this tax bill is for, or includes, escaped assessments for prior fiscal years, it may be eligible for payment over a four-year period. For details, call the number above.&nbsp;</p>
+<h1><strong>&nbsp;</strong></h1>
+<p>TAXPAYER’S RESPONSIBILITY: FAILURE TO RECEIVE A BILL DOES NOT RELIEVE A TAXPAYER’S RESPONSIBILITY TO PAY TAXES WHEN DUE or constitute cause for cancellation of penalty and costs in cases of delinquency (R&amp;T §2610.5). To print or view current year tax bills, please visit our website. Please ensure the bill you are paying is for property on which you are obligated to pay taxes. The Tax Collector is not responsible for payments made on wrong parcels. If you no longer have interest in this property, please return this bill to the Tax Collector or, if known, forward the bill to the new owner.&nbsp;</p>
+<h1><strong>&nbsp;</strong></h1>
+<p>IMPORTANT REMINDER: You may be eligible for a property tax refund! Please visit <a href="https://www.sbcountyatc.gov/tax-services/property-tax/unclaimed-refunds" target="_blank" rel="noopener">www.sbcountyatc.gov/tax-services/property-tax/unclaimed-refunds</a> and look up your parcel to find out if you’re eligible.</p>
+<h1>Bill Back (Assessor)</h1>
+<p>ASSESSED VALUE: The County Assessor calculates all property values. Any questions regarding valuations or exemptions should be directed to the County Assessor, not the Tax Collector. If you disagree with your property’s valuation, you have a right to an informal assessment review with the Assessor. For more information, contact the County Assessor at the phone number above, or dial toll free at (877) 885-7654.&nbsp;</p>
+<h1><strong>&nbsp;</strong></h1>
+<p>If the taxpayer and the County Assessor cannot agree on proper assessed value after an informal assessment review, the taxpayer has the right to file an appeal with the Assessment Appeals Board from July 2 to November 30, inclusive. If the appeal is for a supplemental or escape assessment, it must be submitted within 60 days of the Notice of Assessment’s mailing date or postmark date, whichever is later. A $45.00 fee or fee waiver must accompany each appeal application. Applications may be submitted electronically at <a href="https://arc.sbcounty.gov/assessment-appeals">https://arc.sbcounty.gov/assessment-appeals</a> or mailed to the following address:&nbsp;</p>
+<h1><strong>&nbsp;</strong></h1>
+<p>Clerk of the Board of Supervisors&nbsp;</p>
+<p>385 N Arrowhead Ave, 2nd Floor&nbsp;</p>
+<p>San Bernardino, CA 92415-0130&nbsp;</p>
+<h1><strong>&nbsp;</strong></h1>
+<p>Requesting an informal review or filing an appeal application does not relieve the applicant from the obligation to pay property taxes by the delinquent dates shown on the tax bill. Relief from penalties shall apply only to the difference between the Assessor’s final determination of value and the value on the assessment roll for the fiscal year covered.</p>
+<h1><strong>&nbsp;</strong></h1>
+<p>PROPERTY LIEN DATE: Unless otherwise specifically stated on the front of the tax bill, taxes are levied on both real and personal property as they were recorded at 12:01 a.m. on January 1. Subsequent change of ownership or removal of the personal property does not relieve the lien. Any changes of ownership after January 1 are not reflected on the annual tax bill that year.&nbsp;</p>
+<h1><strong>&nbsp;</strong></h1>
+<p>OWNERSHIP CHANGES: The law requires any person acquiring an interest in real property or a manufactured home subject to property tax to file a Change of Ownership Statement with the Assessor&nbsp;</p>
+<p>within 45 days of the change.&nbsp;</p>
+<h1><strong>&nbsp;</strong></h1>
+<p>ADDRESS CHANGES: Property tax bills are mailed to the mailing address last recorded on the Assessor’s roll. All requests for address changes must be made in writing by the owner of record or pre-designated agent. Please send your request to the Assessor at the above address or write your new address on the back of your bill stub and send it to the Tax Collector. For more information, please visit <a href="http://arc.sbcounty.gov/change-address">arc.sbcounty.gov/change-address</a>.&nbsp;</p>
+<h1><strong>&nbsp;</strong></h1>
+<p>HOMEOWNER’S EXEMPTION: Homeowners who own and occupy a property as their primary residence as of 12:01 a.m. on January 1 are eligible for a homeowner’s exemption. If you qualify and have not filed a claim, call the Assessor at the number above. If you are currently receiving a homeowner’s exemption and you no longer owned or occupied this property as your primary residence as of 12:01 a.m. on January 1 then you must, by law, notify the Assessor by December 10 to avoid a penalty.</p>
+<h1>Social Information</h1>
+<p>Follow Us On Social Media:</p>
+<p>Facebook: @sanbernardinocountyatc</p>
+<p>X: @atc_san</p>
+<p>Instagram: @sanbernardinocountyatc</p>
+<p>Yelp: San Bernardino County Tax Collector</p>
+<h1><strong>&nbsp;</strong></h1>
+<p>Tell us what you think!</p>
+<p><a href="http://www.mytaxcollector.com/Survey">www.MyTaxCollector.com/Survey</a></p>
+<p>Thank you!</p>                </div>
+            </div>    </section>    </main>
+</div>
+</body></html>

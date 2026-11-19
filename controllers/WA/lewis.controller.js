@@ -1,4 +1,4 @@
-// Author: Sanam Poojitha
+// Author:Sanam Poojitha
 import getBrowserInstance from "../../utils/chromium/browserLaunch.js";
 
 const logError = (scope, err) => {
@@ -62,19 +62,10 @@ async function ac_1(page, parcel) {
 
     // Enter parcel number in search input and submit
     await page.type("#q", String(parcel), { delay: 30 });
-    await page.keyboard.press("Enter");
-
-    // FIX: Wait for direct parcel page load or search result table (handling both direct redirects and result rows)
-    await page.waitForSelector("#general dl, .table-link-rows, .no-results, .alert-danger", { timeout: 30000 });
-
-    // FIX: If search results display a table, click the first matching result row to navigate to parcel details
-    const firstRow = await page.$("table.table-link-rows tbody tr[data-href]");
-    if (firstRow) {
-      await Promise.all([
-        page.waitForNavigation({ waitUntil: "domcontentloaded", timeout: 30000 }),
-        firstRow.click()
-      ]);
-    }
+    await Promise.all([
+      page.waitForNavigation({ waitUntil: "domcontentloaded", timeout: 90000 }),
+      page.keyboard.press("Enter")
+    ]);
 
     // Check if no results
     const noResult = await page.$(".no-results, .alert-danger");
@@ -154,7 +145,6 @@ async function ac_2(page) {
       total_assessed_value: "N/A",
       total_taxable_value: "N/A",
       taxing_authority: "Lewis County Treasurer's Office, Chehalis, WA",
-      // FIX: Corrected contact address from Skagit County (Mount Vernon) to Lewis County Treasurer (Chehalis, WA)
       contact_info: "Lewis County Treasurer's Office, 351 NW North St, Chehalis, WA 98532",
       notes: "",
       delinquent: "",
@@ -162,43 +152,41 @@ async function ac_2(page) {
     };
 
     // General Info
-    // FIX: Scrape from DOM directly (falling back to #top-information) so hidden accordion/collapsed panel doesn't time out
-    const generalData = await page.evaluate(() => {
-      const norm = s => s?.replace(/\s+/g, " ").trim() || "";
-      let parcel = norm(document.querySelector("#general dt:nth-of-type(1) + dd")?.innerText);
-      let siteAddress = norm(document.querySelector("#general dt:nth-of-type(2) + dd")?.innerText);
-      let owner = norm(document.querySelector("#general dd.text-capitalize span")?.innerText);
+    const generalButton = await page.$('button[data-target="#general"]');
+    if (generalButton && await page.evaluate(el => el.getAttribute("aria-expanded") !== "true", generalButton)) {
+      await generalButton.click();
+      await sleep(300);
+    }
 
-      // Fallback to top header card which is always present
-      if (!parcel) parcel = norm(document.querySelector("#top-information strong")?.innerText);
-      if (!siteAddress) siteAddress = norm(document.querySelector("#top-information .success")?.innerText);
-      if (!owner) owner = norm(document.querySelector("#top-information a[href*='search_by_owner']")?.innerText);
-
-      let address = siteAddress;
-      const ownerDd = document.querySelector("#general dd.text-capitalize");
-      if (ownerDd && siteAddress) {
-        const lines = ownerDd.innerText.split("\n").map(norm).filter(Boolean);
-        const cityStateZip = lines[lines.length - 1];
-        if (cityStateZip && /,\s*[A-Z]{2}\s*\d{5}/i.test(cityStateZip) && !address.toLowerCase().includes(cityStateZip.toLowerCase())) {
-          address = `${siteAddress}, ${cityStateZip}`;
-        }
-      }
-
-      return {
-        parcel_number: parcel,
-        property_address: address,
-        owner_name: owner ? [owner] : []
-      };
-    });
-    Object.assign(data, generalData);
+    const generalReady = await softWait(page, "#general dl", 15000);
+    if (generalReady) {
+      const generalData = await page.evaluate(() => {
+        const norm = s => s?.replace(/\s+/g, " ").trim() || "";
+        const dl = document.querySelector("#general dl");
+        const parcel = norm(dl.querySelector("dt:nth-of-type(1) + dd")?.innerText);
+        const address = norm(dl.querySelector("dt:nth-of-type(2) + dd")?.innerText);
+        const ownerSpan = document.querySelector("#general dd.text-capitalize span");
+        return {
+          parcel_number: parcel,
+          property_address: address,
+          owner_name: ownerSpan ? [norm(ownerSpan.innerText)] : []
+        };
+      });
+      Object.assign(data, generalData);
+    }
 
     // Property Values
-    // FIX: Read assessed & taxable values directly from #property-values table
+    const propertyButton = await page.$('button[data-target="#property-values"]');
+    if (propertyButton && await page.evaluate(el => el.getAttribute("aria-expanded") !== "true", propertyButton)) {
+      await propertyButton.click();
+      await sleep(300);
+    }
+
     const propertyValues = await page.evaluate(() => {
       const norm = s => s?.replace(/\s+/g, " ").trim() || "N/A";
       const table = document.querySelector("#property-values table");
       if (!table) return {};
-      const lastRow = table.querySelector("tbody tr.success, tbody tr:first-child");
+      const lastRow = table.querySelector("tbody tr.success, tbody tr:last-child");
       if (!lastRow) return {};
       return {
         total_assessed_value: `${norm(lastRow.children[1]?.innerText)}`,
@@ -207,132 +195,67 @@ async function ac_2(page) {
     });
     Object.assign(data, propertyValues);
 
-    // Charge History
-    // FIX: Scrape billed Property Tax Principal from #charge-history table (tbody[id^='tax-statement-'])
-    const chargeHistory = await page.evaluate(() => {
-      const norm = s => s?.replace(/\s+/g, " ").trim() || "";
-      const tbodies = Array.from(document.querySelectorAll("#charge-history table tbody[id^='tax-statement-']"));
-      const charges = {};
-
-      tbodies.forEach(tb => {
-        const yrMatch = tb.id.match(/\d{4}/);
-        if (!yrMatch) return;
-        const yr = Number(yrMatch[0]);
-
-        // Find row where description column is "Principal" to isolate Property Tax Principal
-        let principal = 0;
-        Array.from(tb.querySelectorAll("tr")).forEach(tr => {
-          const desc = norm(tr.querySelector("td:nth-child(2)")?.innerText);
-          const amtStr = norm(tr.querySelector("td:nth-child(3)")?.innerText).replace(/[^0-9.]/g, "");
-          if (/^Principal$/i.test(desc)) {
-            principal = Number(amtStr) || 0;
-          }
-        });
-
-        const totalRow = tb.querySelector("tr.total td:last-child");
-        const total = totalRow ? Number(norm(totalRow.innerText).replace(/[^0-9.]/g, "")) : 0;
-
-        charges[yr] = {
-          principal: principal || total,
-          total: total
-        };
-      });
-
-      return charges;
-    });
-
     // Payment History
-    // FIX: Scrape Property Tax Principal (for base_amount) AND actual transaction amount paid from "Total for <Date>" row
-    const paymentHistory = await page.evaluate(() => {
-      const norm = s => s?.replace(/\s+/g, " ").trim() || "";
-      const tbodies = Array.from(document.querySelectorAll("#payment-history table tbody"));
-      const hist = [];
+    const paymentButton = await page.$('button[data-target="#payment-history"]');
+    if (paymentButton && await page.evaluate(el => el.getAttribute("aria-expanded") !== "true", paymentButton)) {
+      await paymentButton.click();
+      await sleep(300);
+    }
 
-      tbodies.forEach(tbody => {
-        let year = null;
-        const header = tbody.querySelector("tr th[colspan]");
-        if (header) {
-          const m = norm(header.innerText).match(/\d{4}/);
-          if (m) year = Number(m[0]);
-        }
-        if (!year) return;
+    let paymentHistory = [];
+    if (paymentButton) {
+      paymentHistory = await page.evaluate(() => {
+        const norm = s => s?.replace(/\s+/g, " ").trim() || "";
+        const tbodies = Array.from(document.querySelectorAll("#payment-history table tbody"));
+        const hist = [];
 
-        let currentDate = "";
-        let currentPrincipal = 0;
-
-        Array.from(tbody.querySelectorAll("tr")).forEach(tr => {
-          const thColspan = tr.querySelector("th[colspan]");
-          const thLast = tr.querySelector("th:last-child");
-          const thText = norm(thColspan?.innerText || "");
-
-          // Ignore annual summary row like "Total for 2026"
-          if (/Total for \d{4}$/i.test(thText)) {
-            return;
+        tbodies.forEach(tbody => {
+          let year = null;
+          const header = tbody.querySelector("tr th[colspan]");
+          if (header) {
+            const m = norm(header.innerText).match(/\d{4}/);
+            if (m) year = Number(m[0]);
           }
-
-          // When encountering "Total for <Date>" row (the actual amount paid for that transaction)
-          if (thColspan && /Total for/i.test(thText)) {
-            const dateFromTotal = thText.replace(/Total for/i, "").trim();
-            const totalPaid = Number(norm(thLast?.innerText).replace(/[^0-9.]/g, "")) || 0;
-            const payDate = dateFromTotal || currentDate;
-
-            hist.push({
-              year,
-              date: payDate,
-              principal: currentPrincipal || totalPaid,
-              totalPaid: totalPaid
-            });
-
-            currentDate = "";
-            currentPrincipal = 0;
-            return;
-          }
-
-          const dateCell = norm(tr.querySelector("td:nth-child(1)")?.innerText);
-          const desc = norm(tr.querySelector("td:nth-child(3)")?.innerText);
-          const amtRaw = norm(tr.querySelector("td:nth-child(4)")?.innerText || "").replace(/[^0-9.]/g, "");
-          const amt = amtRaw ? Number(amtRaw) : 0;
-
-          if (dateCell && !dateCell.toLowerCase().includes("total")) {
-            currentDate = dateCell;
-          }
-
-          if (desc && /Property Tax Principal/i.test(desc)) {
-            currentPrincipal += amt;
-          }
+          if (!year) return;
+          let currentDate = "";
+          Array.from(tbody.querySelectorAll("tr")).forEach(tr => {
+            const dateCell = norm(tr.querySelector("td:nth-child(1)")?.innerText);
+            const desc = norm(tr.querySelector("td:nth-child(3)")?.innerText);
+            const amtRaw = norm(tr.querySelector("td:nth-child(4)")?.innerText || "").replace(/[^0-9.]/g, "");
+            const amt = amtRaw ? Number(amtRaw) : null;
+            if (dateCell) currentDate = dateCell;
+            if (desc && amt !== null) hist.push({ year, date: currentDate, description: desc, amount: amt });
+          });
         });
 
-        // Flush any trailing payment if total row was omitted
-        if (currentPrincipal > 0) {
-          hist.push({
-            year,
-            date: currentDate,
-            principal: currentPrincipal,
-            totalPaid: currentPrincipal
-          });
-        }
+        return hist;
       });
-
-      return hist;
-    });
+    }
 
     // Current Charges
-    // FIX: Parse current charges safely if active balance exists
-    const currentCharges = await page.evaluate(() => {
-      const norm = s => s?.replace(/\s+/g, " ").trim() || "";
-      const tb = document.querySelector("#current-charges tbody");
-      if (!tb) return [];
-      const totalRow = tb.querySelector("tr.total td:last-child");
-      const total = totalRow ? Number(norm(totalRow.innerText).replace(/[^0-9.]/g, "")) : 0;
-      const yrMatch = tb.querySelector("tr:first-child td:first-child")?.innerText.match(/\d{4}/);
-      return [{
-        year: yrMatch ? Number(yrMatch[0]) : null,
-        totalAmount: total
-      }];
-    });
+    const chargeButton = await page.$('button[data-target="#charge-history"]');
+    if (chargeButton && await page.evaluate(el => el.getAttribute("aria-expanded") !== "true", chargeButton)) {
+      await chargeButton.click();
+      await sleep(300);
+    }
 
-    // FIX: Passed chargeHistory into buildTaxHistory: base_amount is Property Tax Principal, amount_paid is actual total paid
-    data.tax_history = buildTaxHistory(paymentHistory, chargeHistory, currentCharges, fmt, formatPaidDate, monthFromDateText, determineStatus);
+    const currentExists = await softWait(page, "#current-charges tbody", 1500);
+    let currentCharges = [];
+    if (currentExists) {
+      currentCharges = await page.evaluate(() => {
+        const tb = document.querySelector("#current-charges tbody");
+        if (!tb) return [];
+        const totalRow = tb.querySelector("tr.total td:last-child");
+        const total = totalRow ? Number(totalRow.innerText.replace(/[^0-9.]/g, "")) : 0;
+        return [{
+          year: Number(tb.querySelector("tr:first-child td:first-child")?.innerText.match(/\d{4}/)[0]),
+          totalAmount: total
+        }];
+      });
+    }
+
+    // Build Tax History
+    data.tax_history = buildTaxHistory(paymentHistory, currentCharges, fmt, formatPaidDate, monthFromDateText, determineStatus);
 
     // Apply notes
     applyTaxNotes(data);
@@ -346,10 +269,8 @@ async function ac_2(page) {
 }
 
 // --- Build Tax History Helper ---
-// FIX: base_amount is strictly Property Tax Principal; amount_paid is the actual amount paid from "Total for <Date>"
-function buildTaxHistory(paymentHistory, chargeHistory, currentCharges, fmt, formatPaidDate, monthFromDateText, determineStatus) {
+function buildTaxHistory(paymentHistory, currentCharges, fmt, formatPaidDate, monthFromDateText, determineStatus) {
   const data = [];
-
   if (paymentHistory.length > 0) {
     const year = Math.max(...paymentHistory.map(p => p.year));
     const payments = paymentHistory.filter(p => p.year === year);
@@ -357,29 +278,22 @@ function buildTaxHistory(paymentHistory, chargeHistory, currentCharges, fmt, for
     const firstHalfPayments = payments.filter(p => monthFromDateText(p.date, year) < 7);
     const secondHalfPayments = payments.filter(p => monthFromDateText(p.date, year) >= 7);
 
-    // Sum principals (for base_amount) and total paid amounts (for amount_paid from "Total for <Date>")
-    const firstHalfPrincipal = firstHalfPayments.reduce((s, r) => s + r.principal, 0);
-    const firstHalfPaid = firstHalfPayments.reduce((s, r) => s + r.totalPaid, 0);
+    // Paid amount as usual from history
+    const firstHalfTotal = firstHalfPayments.reduce((s, r) => s + r.amount, 0);
+    const secondHalfTotal = secondHalfPayments.reduce((s, r) => s + r.amount, 0);
+    const totalPaid = firstHalfTotal + secondHalfTotal;
+    const chargeTotal = currentCharges[0]?.totalAmount || totalPaid;
 
-    const secondHalfPrincipal = secondHalfPayments.reduce((s, r) => s + r.principal, 0);
-    const secondHalfPaid = secondHalfPayments.reduce((s, r) => s + r.totalPaid, 0);
+    // Base amount is the Property Tax Principal
+    const firstHalfPrincipal = firstHalfPayments.filter(r => /Property Tax Principal/i.test(r.description)).reduce((s, r) => s + r.amount, 0) || firstHalfTotal;
+    const secondHalfPrincipal = secondHalfPayments.filter(r => /Property Tax Principal/i.test(r.description)).reduce((s, r) => s + r.amount, 0) || secondHalfTotal;
 
-    // Billed Property Tax Principal from chargeHistory
-    const billedPrincipal = chargeHistory[year]?.principal || (firstHalfPrincipal + secondHalfPrincipal);
-    const halfPrincipal = billedPrincipal > 0 ? billedPrincipal / 2 : firstHalfPrincipal;
-
-    // Base amounts strictly set to Property Tax Principal
-    const base1 = firstHalfPrincipal > 0 ? firstHalfPrincipal : halfPrincipal;
-    const base2 = secondHalfPrincipal > 0 ? secondHalfPrincipal : (billedPrincipal > 0 ? (billedPrincipal - base1) : halfPrincipal);
-
-    // Annual Payment (if paid in full in 1st half)
-    const totalPrincipalPaid = firstHalfPrincipal + secondHalfPrincipal;
-    const totalPaid = firstHalfPaid + secondHalfPaid;
-    if (firstHalfPayments.length > 0 && secondHalfPayments.length === 0 && Math.abs(totalPrincipalPaid - billedPrincipal) < 0.05) {
+    // Annual Payment
+    if (firstHalfPayments.length > 0 && secondHalfPayments.length === 0 && totalPaid === chargeTotal) {
       data.push({
         year,
         jurisdiction: "County",
-        base_amount: fmt(billedPrincipal),
+        base_amount: fmt(firstHalfPrincipal),
         amount_due_num: 0,
         amount_paid_num: totalPaid,
         amount_due: "$0.00",
@@ -394,49 +308,46 @@ function buildTaxHistory(paymentHistory, chargeHistory, currentCharges, fmt, for
       return data;
     }
 
-    // Semi-Annual Logic:
+    // Semi-Annual Logic
     // First Half
-    const due1 = firstHalfPaid > 0 ? 0 : base1;
     data.push({
       year,
       jurisdiction: "County",
-      base_amount: fmt(base1),
-      amount_due_num: due1,
-      amount_paid_num: firstHalfPaid,
-      amount_due: fmt(due1),
-      amount_paid: fmt(firstHalfPaid),
-      paid_date: firstHalfPayments[0] ? formatPaidDate(firstHalfPayments[0].date, year) : "",
+      base_amount: fmt(firstHalfPrincipal),
+      amount_due_num: 0,
+      amount_paid_num: firstHalfTotal,
+      amount_due: fmt(0),
+      amount_paid: fmt(firstHalfTotal),
+      paid_date: formatPaidDate(firstHalfPayments[0]?.date, year),
       payment_type: "Semi-Annual",
       mailing_date: "N/A",
       due_date: `04/30/${year}`,
       delq_date: `05/01/${year}`,
-      status: due1 === 0 ? "Paid" : "Delinquent"
+      status: firstHalfTotal > 0 ? "Paid" : "Delinquent"
     });
 
     // Second Half
-    const due2 = secondHalfPaid > 0 ? 0 : base2;
+    const due = secondHalfTotal > 0 ? 0 : chargeTotal;
     data.push({
       year,
       jurisdiction: "County",
-      base_amount: fmt(base2),
-      amount_due_num: due2,
-      amount_paid_num: secondHalfPaid,
-      amount_due: fmt(due2),
-      amount_paid: fmt(secondHalfPaid),
+      base_amount: fmt(secondHalfPrincipal > 0 ? secondHalfPrincipal : due),
+      amount_due_num: due,
+      amount_paid_num: secondHalfTotal,
+      amount_due: fmt(due),
+      amount_paid: fmt(secondHalfTotal),
       paid_date: secondHalfPayments[0] ? formatPaidDate(secondHalfPayments[0].date, year) : "",
       payment_type: "Semi-Annual",
       mailing_date: "N/A",
       due_date: `10/31/${year}`,
       delq_date: `11/01/${year}`,
-      status: due2 === 0 ? "Paid" : determineStatus({ amount_due_num: due2, amount_paid_num: secondHalfPaid })
+      status: determineStatus({ amount_due_num: due, amount_paid_num: secondHalfTotal })
     });
 
-  } else {
-    // For unpaid/delinquent parcels, derive tax principal from chargeHistory or currentCharges
-    const chargeYears = Object.keys(chargeHistory || {}).map(Number);
-    const year = currentCharges[0]?.year || (chargeYears.length > 0 ? Math.max(...chargeYears) : new Date().getFullYear());
-    const totalPrincipal = chargeHistory[year]?.principal || currentCharges[0]?.totalAmount || 0;
-    const half = totalPrincipal / 2;
+  } else if (currentCharges.length > 0) {
+    const year = currentCharges[0].year;
+    const total = currentCharges[0].totalAmount;
+    const half = total / 2;
 
     data.push({
       year,
