@@ -1,6 +1,7 @@
 import express from "express";
 // Author:- Bhagyashree Badadal
 import {search as custer_search} from "../controllers/CO/custer.controller.js";
+import {search as moffat_search} from "../controllers/CO/moffat.controller.js";
 
 const route = express.Router();
 
@@ -11,5 +12,6 @@ route.post("/cheyenne", custer_search);
 route.post("/sedgwick", custer_search);
 route.post("/washington", custer_search);
 route.post("/yuma", custer_search);
+route.post("/moffat", moffat_search);
 
 export default route;

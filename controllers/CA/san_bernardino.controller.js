@@ -31,7 +31,7 @@ function createTaxHistory() {
     return {
         jurisdiction: "County",
         year: "",
-        payment_type: "",
+        payment_type: "1st Installment",
         status: "",
         base_amount: "$0.00",
         amount_paid: "$0.00",
@@ -39,7 +39,7 @@ function createTaxHistory() {
         mailing_date: "N/A",
         due_date: "",
         delq_date: "",
-        paid_date: "",
+        paid_date: "-",
         good_through_date: "-",
     };
 }
@@ -88,12 +88,21 @@ async function searchAccountNumber(page, url, account) {
         // Cookie banner not present, continue
     }
 
-    const iframeEl = await page.waitForSelector('iframe#gsg-public-site', timeout_option);
-    const iframe = await iframeEl.contentFrame();
-    if (!iframe) throw new Error("Could not access iframe contentFrame");
+    // Wait for the GovHub iframe directly using Puppeteer's built-in waitForFrame()
+    const iframe = await page.waitForFrame(
+        (f) => f.url().includes('gsgprod.sbcountyatc.gov') && f.url().includes('property-tax'),
+        timeout_option
+    );
 
-    const inputSelector = 'input[id^="typeahead-input-"]';
+    if (!iframe) {
+        throw new Error("Could not access GovHub search frame");
+    }
+
+    // Wait for the search input to be rendered inside the live frame
+    const inputSelector = 'input[id^="typeahead-input-"], input[placeholder*="Search by Parcel"], input[placeholder*="Search"]';
     await iframe.waitForSelector(inputSelector, timeout_option);
+
+    // Type the account number
     await iframe.type(inputSelector, account.trim(), { delay: 50 });
 
     const itemSelector = '.typeahead-list-item, .vbst-item, .list-group-item';
@@ -178,20 +187,17 @@ async function extractAccountSummary(page, summaryUrl, account, result) {
             }
 
             if (tb.classList.contains('installment')) {
-                const row = tb.querySelector('tr.d-none.d-md-table-row') || tb.querySelector('tr');
-                if (row) {
-                    const desc = row.querySelector('th.description')?.innerText.trim() || '';
-                    const balance = row.querySelector('td.balance')?.innerText.trim() || '$0.00';
-                    const statusText = row.querySelector('td.status')?.innerText.trim() || '';
-                    const asOfText = row.querySelector('td.as-of')?.innerText.trim() || '';
+                const desc = tb.querySelector('th.description')?.textContent.trim() || '';
+                const balance = tb.querySelector('td.balance')?.textContent.trim() || '$0.00';
+                const statusText = tb.querySelector('td.status')?.textContent.trim() || '';
+                const asOfText = tb.querySelector('td.as-of')?.textContent.trim() || '';
 
-                    billsMap[bNum].installments.push({
-                        description: desc,
-                        balance: balance,
-                        statusText: statusText,
-                        asOfText: asOfText
-                    });
-                }
+                billsMap[bNum].installments.push({
+                    description: desc,
+                    balance: balance,
+                    statusText: statusText,
+                    asOfText: asOfText
+                });
             } else {
                 const link = tb.querySelector('th.year-header a');
                 if (link) {
@@ -213,8 +219,8 @@ async function extractAccountSummary(page, summaryUrl, account, result) {
         Object.values(billsMap).forEach((b) => {
             if (b.year > 0 && b.year < maxYear) {
                 b.installments.forEach((inst) => {
-                    const balNum = parseFloat(inst.balance.replace(/[$,]/g, '')) || 0;
-                    const isUnpaid = balNum > 0 || (/unpaid/i.test(inst.statusText) || !/paid/i.test(inst.statusText));
+                    const balNum = parseFloat(inst.balance.replace(/[^0-9.]/g, '')) || 0;
+                    const isUnpaid = balNum > 0 || (/unpaid/i.test(inst.statusText) && !/paid/i.test(inst.statusText));
                     if (isUnpaid && balNum > 0) {
                         has_priors_unpaid = true;
                     }
@@ -255,31 +261,61 @@ async function extractBillDetails(page, summaryUrl, latestBill, result) {
         detailUrl = `${baseSummary}${billPath}`;
     }
 
-    await page.goto(detailUrl, { waitUntil: "domcontentloaded", ...timeout_option });
-    await page.waitForSelector('table.assessed-values-table', timeout_option);
+    try {
+        await page.goto(detailUrl, { waitUntil: "domcontentloaded", ...timeout_option });
+        await page.waitForSelector('table.assessed-values-table', { timeout: 15000 });
 
-    const assessedValues = await page.evaluate(() => {
-        const table = document.querySelector('table.assessed-values-table');
-        if (!table) return null;
+        const detailData = await page.evaluate(() => {
+            const table = document.querySelector('table.assessed-values-table');
+            let assessedValues = null;
+            if (table) {
+                const tds = Array.from(table.querySelectorAll('tbody tr:first-child td'));
+                if (tds.length >= 5) {
+                    assessedValues = {
+                        land_value: tds[0].innerText.trim() || "$0.00",
+                        improvements: tds[1].innerText.trim() || "$0.00",
+                        exemption: tds[3].innerText.trim() || "$0.00",
+                        total_assessed_value: tds[4].innerText.trim() || "$0.00",
+                        total_taxable_value: tds[4].innerText.trim() || "$0.00"
+                    };
+                }
+            }
 
-        const tds = Array.from(table.querySelectorAll('tbody tr:first-child td'));
-        if (tds.length < 5) return null;
+            const detailInstallments = [];
+            document.querySelectorAll('.row.installment').forEach((row) => {
+                const labelText = row.querySelector('.label')?.innerText.trim() || '';
+                const isPaidEl = row.querySelector('.installment-paid');
+                const isPaid = isPaidEl ? /paid/i.test(isPaidEl.innerText) : false;
+                const amount = row.querySelector('.amount-due, .amount')?.innerText.trim() || '';
+                const paidDate = row.querySelector('.paid-date')?.innerText.trim() || '-';
+                const delqDateMatch = row.querySelector('.installment-date')?.innerText.match(/\d{1,2}\/\d{1,2}\/\d{4}/);
+                const delqDate = delqDateMatch ? delqDateMatch[0] : '';
 
-        return {
-            land_value: tds[0].innerText.trim() || "$0.00",
-            improvements: tds[1].innerText.trim() || "$0.00",
-            exemption: tds[3].innerText.trim() || "$0.00",
-            total_assessed_value: tds[4].innerText.trim() || "$0.00",
-            total_taxable_value: tds[4].innerText.trim() || "$0.00"
-        };
-    });
+                detailInstallments.push({
+                    labelText,
+                    isPaid,
+                    amount,
+                    paidDate,
+                    delqDate
+                });
+            });
 
-    if (assessedValues) {
-        result.land_value = assessedValues.land_value;
-        result.improvements = assessedValues.improvements;
-        result.exemption = assessedValues.exemption;
-        result.total_assessed_value = assessedValues.total_assessed_value;
-        result.total_taxable_value = assessedValues.total_taxable_value;
+            return { assessedValues, detailInstallments };
+        });
+
+        if (detailData.assessedValues) {
+            result.land_value = detailData.assessedValues.land_value;
+            result.improvements = detailData.assessedValues.improvements;
+            result.exemption = detailData.assessedValues.exemption;
+            result.total_assessed_value = detailData.assessedValues.total_assessed_value;
+            result.total_taxable_value = detailData.assessedValues.total_taxable_value;
+        }
+
+        if (detailData.detailInstallments && detailData.detailInstallments.length > 0) {
+            latestBill.detailInstallments = detailData.detailInstallments;
+        }
+    } catch (err) {
+        console.warn("Notice: Assessed values table or bill details not found on detail page:", err.message);
     }
 }
 
@@ -306,17 +342,32 @@ const account_search = async (page, url, account) => {
             th.year = maxYear;
             th.payment_type = `${instNum}${instNum === 1 ? 'st' : 'nd'} Installment`;
 
-            const isUnpaid = /unpaid/i.test(inst.statusText) || (parseFloat(inst.balance.replace(/[$,]/g, '')) || 0) > 0;
-            const isPaid = !isUnpaid && /paid/i.test(inst.statusText);
+            // Check details extracted from the bill detail page if available
+            const detailInst = latestBill.detailInstallments?.find(d => 
+                (isFirst && /1st|first/i.test(d.labelText)) || (!isFirst && /2nd|second/i.test(d.labelText))
+            );
+
+            const balNum = parseFloat(inst.balance.replace(/[^0-9.]/g, '')) || 0;
+            const hasPaidWord = (/paid/i.test(inst.statusText) && !/unpaid/i.test(inst.statusText)) || (detailInst && detailInst.isPaid);
+            // If balance is $0.00 or 0, or status explicitly says paid, it is DEFINITIVELY Paid
+            const isPaid = (balNum === 0 || inst.balance === "$0.00") && (hasPaidWord || !/unpaid/i.test(inst.statusText));
 
             let delq_date = isFirst ? `12/10/${maxYear}` : `04/10/${maxYear + 1}`;
+            if (detailInst?.delqDate) {
+                delq_date = detailInst.delqDate;
+            }
 
             if (isPaid) {
                 const paidMatch = inst.statusText.match(/\$([\d,]+\.\d{2})/);
-                th.amount_paid = paidMatch ? `$${paidMatch[1]}` : "$0.00";
-                th.base_amount = th.amount_paid;
+                const detailAmount = detailInst?.amount?.match(/\$([\d,]+\.\d{2})/)?.[0] || detailInst?.amount;
+                th.amount_paid = paidMatch ? `$${paidMatch[1]}` : (detailAmount || "$0.00");
+                th.base_amount = th.amount_paid !== "$0.00" ? th.amount_paid : (detailAmount || "$0.00");
                 th.amount_due = "$0.00";
-                th.paid_date = inst.asOfText.match(/\d{1,2}\/\d{1,2}\/\d{4}/)?.[0] || inst.asOfText;
+                th.status = "Paid";
+
+                const extractedPaidDate = inst.asOfText.match(/\d{1,2}\/\d{1,2}\/\d{4}/)?.[0] || 
+                                          (detailInst?.paidDate && detailInst.paidDate !== '-' ? detailInst.paidDate : null);
+                th.paid_date = extractedPaidDate || inst.asOfText || "-";
             } else {
                 th.amount_due = inst.balance;
                 th.base_amount = inst.balance;
@@ -324,14 +375,10 @@ const account_search = async (page, url, account) => {
                 th.paid_date = "-";
                 const delqMatch = inst.asOfText.match(/\d{1,2}\/\d{1,2}\/\d{4}/);
                 if (delqMatch) delq_date = delqMatch[0];
+
+                th.status = is_delq(delq_date) ? "Delinquent" : "Due";
             }
 
-            let status = isPaid ? "Paid" : "Due";
-            if (!isPaid && is_delq(delq_date)) {
-                status = "Delinquent";
-            }
-
-            th.status = status;
             th.due_date = isFirst ? `11/01/${maxYear}` : `02/01/${maxYear + 1}`;
             th.delq_date = delq_date;
 
@@ -415,6 +462,7 @@ const search = async (req, res) => {
         const browser = await getBrowserInstance();
         context = await browser.createBrowserContext();
         const page = await context.newPage();
+        await page.setViewport({ width: 1280, height: 800 });
         await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
         page.setDefaultNavigationTimeout(90000);
 
